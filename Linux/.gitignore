@@ -1,0 +1,9 @@
+*.wav
+./source
+./audio
+./spec
+./dist
+*.h5
+.idea/
+*.conf
+__pycache__
