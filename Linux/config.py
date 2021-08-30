@@ -66,7 +66,7 @@ class Configuration:
         self.data['audio']['channels'] = 1
         # spectrogram settings
         self.data['spectrogram'] = {}
-        self.data['spectrogram']['cut_file'] = True
+        self.data['spectrogram']['with_cut_file'] = True
         self.data['spectrogram']['save_split_audio'] = True
         # server settings
         self.data['server'] = {}

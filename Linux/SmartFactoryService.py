@@ -8,6 +8,7 @@ import re
 import os
 import shutil
 # from tensorflow.python.framework.ops import device
+from config import Configuration
 import time
 import tqdm
 import wave
@@ -41,6 +42,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '0'
 # =======================================================
 #                   public variable 
 # =======================================================
+CONFIG = Configuration()
 SOURCE_PATH = './source/'
 AUDIO_OUT_PATH = './audio/'
 SPEC_PATH = './spec/'
@@ -75,18 +77,16 @@ def wav_to_mp3() -> None:
 #   Audio class
 # =============================================================================
 class Audio:
-    DEVICE_1 = 'Cotron EZM-001-1'
-    # DEVICE_1 = r'Cotron EZM-001-1\)$'
-    DEVICE_2 = 'Cotron EZM-001-2'
-    # DEVICE_2 = r'Cotron EZM-001-2\)$'
 
-    # framerate = 48000
-    framerate = 96000
-    samples = 4096
-    sampwidth = 2
-    channels = 1
+    DEVICE_1 = CONFIG.audio['mic_1']['name']
+    DEVICE_2 = CONFIG.audio['mic_2']['name']
 
-    def __init__(self, filename, device='', second=5) -> None:
+    framerate = CONFIG.audio["framerate"]
+    samples = CONFIG.audio['samples']
+    sampwidth = CONFIG.audio['sampwidth']
+    channels = CONFIG.audio['channels']
+
+    def __init__(self, filename, device='', second=CONFIG.audio['second']) -> None:
         self.filename = filename
         self.record_data = b''
         self.device = device
@@ -202,10 +202,10 @@ class Specgram():
     SpaceNumDef = 1 
     freq_split_list = [ [0,10000] ]
 
-    def __init__(self, filename: str, cut=True, save_audio=True) -> None:
+    def __init__(self, filename: str) -> None:
         self.filename = filename
-        self.with_cut_file = cut
-        self.save_split_audio = save_audio
+        self.with_cut_file = CONFIG.spectrogram['with_cut_file']
+        self.save_split_audio = CONFIG.spectrogram['save_split_audio']
 
     def toSpecgram(self):
         my_mkdir(AUDIO_OUT_PATH)
