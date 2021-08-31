@@ -35,16 +35,48 @@ class Configuration:
         return self.data['version']
 
     @property
-    def device(self) -> object:
-        return self.data['device']
+    def mic_1_name(self) -> str:
+        return self.data['device']['mic_1']['name']
 
     @property
-    def audio(self) -> object:
-        return self.data['audio']
+    def mic_1_cali(self) -> int:
+        return self.data['device']['mic_1']['calibration']
 
     @property
-    def spectrogram(self) -> object:
-        return self.data['spectrogram']
+    def mic_2_name(self) -> str:
+        return self.data['device']['mic_2']['name']
+
+    @property
+    def mic_2_cali(self) -> int:
+        return self.data['device']['mic_2']['calibration']
+
+    @property
+    def second(self) -> int:
+        return self.data['audio']['second']
+
+    @property
+    def framerate(self) -> int:
+        return self.data['audio']['framerate']
+
+    @property
+    def samples(self) -> int:
+        return self.data['audio']['samples']
+
+    @property
+    def sampwidth(self) -> int:
+        return self.data['audio']['sampwidth']
+
+    @property
+    def channels(self) -> int:
+        return self.data['audio']['channels']
+
+    @property
+    def with_cut_file(self) -> bool:
+        return self.data['spectrogram']['with_cut_file']
+
+    @property
+    def save_split_audio(self) -> bool:
+        return self.data['spectrogram']['save_split_audio']
 
     @property
     def port(self) -> int:

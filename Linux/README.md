@@ -1,6 +1,7 @@
 # SmartFactory
 ## markbook
 [Configuration](#Configuration)
+
 # Configuration
 This is a smart factory configuration class, This class is a single instance, You can read and write configuration in any process.
 
@@ -8,9 +9,17 @@ This is a smart factory configuration class, This class is a single instance, Yo
 | name | return type |
 |:---:|:---:|
 | version | string |
-| device | object |
-| audio | object |
-| spectrogram | object |
+| mic_1_name | string |
+| mic_1_cali | string |
+| mic_2_name | string |
+| mic_2_cali | string |
+| second | int |
+| framerate | int |
+| samples | int |
+| sampwidth | int |
+| channels | int |
+| with_cut_file | bool |
+| save_split_audio | bool |
 | port | int |
 
 
@@ -19,7 +28,7 @@ This is a smart factory configuration class, This class is a single instance, Yo
 ### create(self)
 ```
 Description:
-    create configuration file
+    create configuration file content
 ```
 
 ### read(self)

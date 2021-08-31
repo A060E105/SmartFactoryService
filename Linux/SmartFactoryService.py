@@ -78,15 +78,15 @@ def wav_to_mp3() -> None:
 # =============================================================================
 class Audio:
 
-    DEVICE_1 = CONFIG.audio['mic_1']['name']
-    DEVICE_2 = CONFIG.audio['mic_2']['name']
+    DEVICE_1 = CONFIG.mic_1_name
+    DEVICE_2 = CONFIG.mic_2_name
 
-    framerate = CONFIG.audio["framerate"]
-    samples = CONFIG.audio['samples']
-    sampwidth = CONFIG.audio['sampwidth']
-    channels = CONFIG.audio['channels']
+    framerate = CONFIG.framerate
+    samples = CONFIG.samples
+    sampwidth = CONFIG.sampwidth
+    channels = CONFIG.channels
 
-    def __init__(self, filename, device='', second=CONFIG.audio['second']) -> None:
+    def __init__(self, filename, device='', second=CONFIG.second) -> None:
         self.filename = filename
         self.record_data = b''
         self.device = device
@@ -204,8 +204,8 @@ class Specgram():
 
     def __init__(self, filename: str) -> None:
         self.filename = filename
-        self.with_cut_file = CONFIG.spectrogram['with_cut_file']
-        self.save_split_audio = CONFIG.spectrogram['save_split_audio']
+        self.with_cut_file = CONFIG.with_cut_file
+        self.save_split_audio = CONFIG.save_split_audio
 
     def toSpecgram(self):
         my_mkdir(AUDIO_OUT_PATH)
