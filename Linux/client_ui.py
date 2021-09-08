@@ -13,6 +13,7 @@ from tkinter import ttk
 from tkinter import filedialog
 import time
 
+
 def defined_layout(obj, cols=1, rows=1):
     def method(trg, col, row):
         for c in range(col):
