@@ -2,6 +2,8 @@
 ## markbook
 [Configuration](#Configuration)
 
+[User Interface](#user-interface)
+
 # Configuration
 This is a smart factory configuration class, This class is a single instance, You can read and write configuration in any process.
 
@@ -42,3 +44,13 @@ Description:
 Description:
     save configuration to file
 ```
+
+
+
+# All in One structure
+
+## workflow
+1. create UI
+2. create a thread for the read USB serial port data in a QR Code scanner
+3. show QR code in UI
+4. hide QR code before recording, or after show 3~5 seconds do it.
