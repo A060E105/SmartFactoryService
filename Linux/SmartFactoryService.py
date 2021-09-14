@@ -78,6 +78,7 @@ def wav_to_mp3() -> None:
 # =============================================================================
 class Audio:
 
+    DEVICE_DEFAULT = CONFIG.mic_default_name
     DEVICE_1 = CONFIG.mic_1_name
     DEVICE_2 = CONFIG.mic_2_name
 

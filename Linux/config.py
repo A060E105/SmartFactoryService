@@ -35,6 +35,18 @@ class Configuration:
         return self.data['version']
 
     @property
+    def device_name(self) -> str:
+        return self.data['device_name']
+
+    @property
+    def mic_default_name(self) -> str:
+        return self.data['device']['mic_default']['name']
+
+    @property
+    def mic_default_cali(self) -> int:
+        return self.data['device']['mic_default']['calibration']
+
+    @property
     def mic_1_name(self) -> str:
         return self.data['device']['mic_1']['name']
 
@@ -82,11 +94,17 @@ class Configuration:
     def port(self) -> int:
         return self.data['server']['port']
 
+    @property
+    def status_message(self) -> list:
+        return self.data['status_message']
+
     # create configuration file
     def create(self) -> None:
         self.data['version'] = '1.0.0'
+        self.data['device_name'] = "A"
         # device settings
         self.data['device'] = {}
+        self.data['device']['mic_default'] = {'name': 'Cotron EZM-001-1', 'calibration': 1}
         self.data['device']['mic_1'] = {'name': 'Cotron EZM-001-1', 'calibration': 1}
         self.data['device']['mic_2'] = {'name': 'Cotron EZM-001-2', 'calibration': 1}
         # audio settings
@@ -99,10 +117,12 @@ class Configuration:
         # spectrogram settings
         self.data['spectrogram'] = {}
         self.data['spectrogram']['with_cut_file'] = True
-        self.data['spectrogram']['save_split_audio'] = True
+        self.data['spectrogram']['save_split_audio'] = False
         # server settings
         self.data['server'] = {}
         self.data['server']['port'] = 7000
+        # status message
+        self.data['status_message'] = ['開機', '等待中', '掃描中', '等待汽缸下壓', '開始錄音']
 
     # read configuration file
     def read(self) -> None:
