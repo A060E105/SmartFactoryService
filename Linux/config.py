@@ -1,3 +1,4 @@
+# coding=utf-8
 """
     author: Jin-Mo, Lin
     email: s106003041@g.ksu.edu.tw
@@ -33,6 +34,10 @@ class Configuration:
     @property
     def version(self) -> str:
         return self.data['version']
+
+    @property
+    def model_name(self) -> str:
+        return self.data['model_name']
 
     @property
     def device_name(self) -> str:
@@ -101,10 +106,11 @@ class Configuration:
     # create configuration file
     def create(self) -> None:
         self.data['version'] = '1.0.0'
+        self.data['model_name'] = 'model.h5'
         self.data['device_name'] = "A"
         # device settings
         self.data['device'] = {}
-        self.data['device']['mic_default'] = {'name': 'Cotron EZM-001-1', 'calibration': 1}
+        self.data['device']['mic_default'] = {'name': 'Cotron EZM-001-2', 'calibration': 1}
         self.data['device']['mic_1'] = {'name': 'Cotron EZM-001-1', 'calibration': 1}
         self.data['device']['mic_2'] = {'name': 'Cotron EZM-001-2', 'calibration': 1}
         # audio settings
@@ -122,15 +128,16 @@ class Configuration:
         self.data['server'] = {}
         self.data['server']['port'] = 7000
         # status message
-        self.data['status_message'] = ['開機', '等待中', '掃描中', '等待汽缸下壓', '開始錄音']
+        self.data['status_message'] = {}
+        self.data['status_message']['wait_for_press'] = '等待按下測試按鈕'
 
     # read configuration file
     def read(self) -> None:
-        with open(self.filename, 'r+') as config:
+        with open(self.filename, 'r+', encoding='utf-8') as config:
             self.data = json.load(config)
 
     # save configuration to file
     def save(self) -> None:
         # using w+ mode open file, if the file does not exist then create the file
-        with open(self.filename, 'w+') as config:
+        with open(self.filename, 'w+', encoding='utf-8') as config:
             json.dump(self.data, config, indent=4)
