@@ -47,7 +47,7 @@ SOURCE_PATH = './source/'
 AUDIO_OUT_PATH = './audio/'
 SPEC_PATH = './spec/'
 
-MODEL = load_model('./model.h5')
+MODEL = load_model('./' + CONFIG.model_name)
 
 # =======================================================
 #                   public methods 
