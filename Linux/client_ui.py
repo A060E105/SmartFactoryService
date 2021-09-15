@@ -3,7 +3,7 @@
     email: s106003041@g.ksu.edu.tw
     description:
 """
-
+import json
 from os import path
 import tkinter as tk
 from tkinter import Menu
@@ -11,14 +11,18 @@ from tkinter import messagebox
 from tkinter.ttk import Progressbar
 import tkinter.font as tkFont
 import time
+import datetime
 
 # config
 from config import Configuration
+
+# write data to csv
+from storage import Storage
+
 # GPIO
 import RPi.GPIO as GPIO
 
-# analysis
-# import SmartFactoryService as SFS
+import socket
 
 # thread
 import threading
@@ -30,9 +34,11 @@ import serial
 #   Global variable
 # ==============================================================================
 config = Configuration()
+storage = Storage()
+button_lock = False
 qr_code_text = ''
 result = ''
-
+status_message = config.status_message
 # ==============================================================================
 #   UI
 # ==============================================================================
@@ -107,7 +113,7 @@ def create_layout(div):
 
     # status
     tv_status = tk.Label(div)
-    tv_status.config(text='等待中', bg=primary_color, font=font)
+    tv_status.config(text=status_message['wait_for_press'], bg=primary_color, font=font)
     tv_status.place(relx=0.1, rely=0.45)
 
     # progress bar div
@@ -164,7 +170,9 @@ def changeText(txt):
 
 def clearText():
     global tv_QR_Code
+    global qr_code_text
     tv_QR_Code.config(text='')
+    qr_code_text = ''
 
 
 def set_status(txt):
@@ -184,6 +192,8 @@ menu.add_cascade(label='選項', menu=new_item)
 new_item.add_command(label='初始化', command=lambda: messagebox.showinfo('初始化', '初始化'))
 new_item.add_separator()
 new_item.add_command(label='麥克風校正', command=lambda: messagebox.showinfo('麥克風校正', '麥克風校正'))
+new_item.add_separator()
+new_item.add_command(label='建立新CSV檔', command=lambda: storage.create())
 
 window.config(menu=menu)
 
@@ -217,6 +227,34 @@ def barcode():
 # ==============================================================================
 #   Smart Factory main methods
 # ==============================================================================
+def send_socket() -> str:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client:
+        client.connect(('127.0.0.1', config.port))
+
+        while True:
+            try:
+                request = json.dumps(['all', get_file_name(), 'default'])
+                client.send(request.encode())
+
+                read_data = json.loads(client.recv(4096).decode('utf-8'))
+                print(f'result: {read_data}')
+                ok_count = 0
+                for item in read_data:
+                    if item == 'OK':
+                        ok_count += 1
+
+                if ok_count > len(read_data)/2:
+                    result_str = 'OK'
+                else:
+                    result_str = 'NG'
+
+                return result_str
+            except KeyboardInterrupt:
+                client.close()
+
+            client.close()
+
+
 def get_file_name() -> str:
     global QR_code_switch
     timestamp = int(time.time())
@@ -232,6 +270,13 @@ def get_file_name() -> str:
 
 def start_analysis(event):
     global QR_code_switch
+    global button_lock
+
+    print('press button')
+
+    if button_lock:
+        return
+    button_lock = True
 
     if QR_code_switch.get() == 'on':
         print('running barcode scanner')
@@ -240,6 +285,7 @@ def start_analysis(event):
         print('running analysis')
 
     print(f"file name: {get_file_name()}")
+    print(f"device: {config.mic_default_name}")
 
     set_status('等待汽缸下壓')
     while GPIO.input(machine_pin):
@@ -248,26 +294,28 @@ def start_analysis(event):
     set_status('下壓完成')
     time.sleep(1)
     set_status('開始錄音')
-    # TODO ("record, spectrogram and AI analysis")
-    # TODO ("add GPU lock")
-    gpu_lock = threading.Lock()
-    queue = Queue()
-    # sfs = SFS.SmartFactoryService(filename=get_file_name(), device=SFS.Audio.DEVICE_DEFAULT, gpu_lock=gpu_lock, queue=queue)
+    result = send_socket()       # send data to server
 
-    time.sleep(1)
+    storage.write(time=datetime.datetime.now().strftime('%Y-%m-%d %H:%M'),
+                  filename=get_file_name(), code=qr_code_text,
+                  device=config.device_name, model=config.model_name,
+                  result=result)
+
     set_status('等待中')
+    clearText()
+    button_lock = False
+
 
 # ==============================================================================
 #   GPIO
 # ==============================================================================
-
 input_pin = 18      # BCM model with GPIO 18, BOARD model with Pin 12. start button
 machine_pin = 4
 
 GPIO.setmode(GPIO.BCM)
 
 GPIO.setup(input_pin, GPIO.IN)
-GPIO.add_event_detect(input_pin, GPIO.FALLING, callback=start_analysis, bouncetime=1000)
+GPIO.add_event_detect(input_pin, GPIO.FALLING, callback=start_analysis, bouncetime=2000)
 
 GPIO.setup(machine_pin, GPIO.IN)        # 汽缸回傳訊號
 
