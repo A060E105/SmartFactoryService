@@ -7,10 +7,13 @@ import sounddevice as sd
 from multiprocessing import Queue
 from SmartFactoryService import Audio
 import SmartFactoryService as SFS
+from config import Configuration
 
-microphones = {'1': Audio.DEVICE_1, '2': Audio.DEVICE_2, 'test': 'test'}
+CONFIG = Configuration()
 
-action_list = ["all", 'rec_only', 'spec_only', 'spec_ai']
+microphones = {'1': Audio.DEVICE_1, '2': Audio.DEVICE_2, 'default': Audio.DEVICE_DEFAULT, 'test': 'test'}
+
+action_list = ["all", 'rec_only', 'spec_only', 'spec_ai', 'cali']
 
 microphones_status = {}
 
@@ -52,6 +55,10 @@ class ClientThread(threading.Thread):
             filename = request[1]
             device_name = request[2]
             device = ''
+            try:
+                config_name = request[3]
+            except IndexError:
+                config_name = None
 
             if action not in action_list:       # check action has or hasn't been defined
                 self.csocket.send(json.dumps(['Error', 'invalid action']).encode())
@@ -71,7 +78,8 @@ class ClientThread(threading.Thread):
 
             print(f'client action: {action}, filename: {filename}, device: {device}')
 
-            sfs = SFS.SmartFactoryService(filename=filename, device=device, queue=queue, gpu_lock=gpu_lock)
+            sfs = SFS.SmartFactoryService(filename=filename, device=device, queue=queue,
+                                          gpu_lock=gpu_lock, config=config_name)
 
             if action == action_list[0]:
                 sfs.all()
@@ -83,6 +91,8 @@ class ClientThread(threading.Thread):
             elif action == action_list[3]:
                 microphones_status[device_name].unlock()  # unlock microphone device
                 sfs.spec_ai()
+            elif action == action_list[4]:
+                sfs.cali()
 
             result_list = queue.get()
             result = json.dumps(result_list)
@@ -98,7 +108,9 @@ def boot_init() -> None:
     queue = Queue()
     os_devices = sd.query_devices()
     for device in os_devices:
-        if re.search(Audio.DEVICE_1, device['name']) is not None:
+        if re.search(Audio.DEVICE_DEFAULT, device['name']) is not None:
+            boot_device = Audio.DEVICE_DEFAULT
+        elif re.search(Audio.DEVICE_1, device['name']) is not None:
             boot_device = Audio.DEVICE_1
         elif re.search(Audio.DEVICE_2, device['name']) is not None:
             boot_device = Audio.DEVICE_2
@@ -114,7 +126,7 @@ def boot_init() -> None:
 boot_init()     # boot initiation
 
 LOCALHOST = ""
-PORT = 8080
+PORT = CONFIG.port
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 server.bind((LOCALHOST, PORT))
