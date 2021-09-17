@@ -35,8 +35,8 @@ import serial
 # ==============================================================================
 config = Configuration()
 storage = Storage()
-button_lock = False
 qr_code_text = ''
+current_file_name = ''
 result = ''
 status_message = config.status_message
 # ==============================================================================
@@ -62,12 +62,13 @@ def defined_layout_weight(obj, cols=1, rows=1):
         method(trg, cols, rows)
 
 
-def create_layout(div):
+def create_layout(div: tk.Frame):
     global window
     global QR_code_switch
     global save_switch
     global tv_QR_Code
     global tv_status
+    global table
     window.update()
     wh = window.winfo_height()
     ww = window.winfo_width()
@@ -112,26 +113,42 @@ def create_layout(div):
     tv_QR_Code.grid(column=1, row=0)
 
     # status
-    tv_status = tk.Label(div)
+    status_div = tk.Frame(div)
+    status_div.config(bg=primary_color)
+    status_div.place(relx=0.1, rely=0.5)
+
+    tv_status_label = tk.Label(status_div)
+    tv_status_label.config(text='狀態：', bg=primary_color, font=font)
+    tv_status_label.grid(column=0, row=0)
+
+    tv_status = tk.Label(status_div)
     tv_status.config(text=status_message['wait_for_press'], bg=primary_color, font=font)
-    tv_status.place(relx=0.1, rely=0.45)
+    tv_status.grid(column=1, row=0)
+    # tv_status.place(relx=0.1, rely=0.5)
 
-    # progress bar div
-    progress_bar_div = tk.Frame(div, bg=primary_color)
-    progress_bar_div.place(relx=0.1, rely=0.6)
-    defined_layout_weight(progress_bar_div)
+    column = ['時間', '序號', '檔案名稱', '結果']
+    text_size = 20
+    column_width = [0.15, 0.2, 0.3, 0.2]
+    heading_style = tk.ttk.Style()
+    column_style = tk.ttk.Style()
+    heading_style.configure('Treeview.Heading', font=(None, text_size))
+    column_style.configure('Treeview', rowheight=35, font=(None, text_size))
+    table = tk.ttk.Treeview(div, height=5, column=column, show='headings')
+    for col, width in zip(column, column_width):
+        table.heading(col, text=col)
+        table.column(col, anchor='center', width=int(screen_width*width))
 
-    # in process bar div
-    progress_bar = Progressbar(progress_bar_div, length=int(div_w*0.8), mode='determinate')
-    # progress_bar = Progressbar(progress_bar_div, length=int(ww*0.35), mode='indeterminate')
-    progress_bar.config(value=20)
-    progress_bar.grid(column=0, row=0)
+    # for col in column:
+    #     table.heading(col, text=col)
+    #     table.column(col, anchor='center', width=int(screen_width*0.2))
+
+    table.place(relx=0.05, rely=0.7)
 
     # result div
-    result = tk.Label(div)
-    result.config(text='OK', font=font, bg=success_color)
-    # result.config(text='NG', font=font, bg=error_color)
-    result.place(relx=0.45, rely=0.8)
+    # result = tk.Label(div)
+    # result.config(text='OK', font=tkFont.Font(size=70), bg=success_color)
+    # # result.config(text='NG', font=font, bg=error_color)
+    # result.place(relx=0.8, rely=0.5)
 
 
 # ==============================================================================
@@ -143,12 +160,15 @@ font = tkFont.Font(size=50)
 align_mode = 'nswe'
 pad = 10
 
+screen_width = window.winfo_screenwidth()
+screen_height = window.winfo_screenheight()
+
 window.title(f'Smart Factory-{config.version}')
 
 defined_layout_weight(window, cols=1, rows=1)
 
-div_size = 900
-div1 = tk.Frame(window, width=div_size, height=div_size, bg=primary_color)
+div_size = 1200
+div1 = tk.Frame(window, width=screen_width, height=screen_height, bg=primary_color)
 # div2 = tk.Frame(window, width=div_size, height=div_size, bg=primary_color)
 
 div1.grid(padx=pad, pady=pad, sticky=align_mode, column=0, row=0)
@@ -162,13 +182,12 @@ for div in [div1]:
 #  show / clear QR Code
 # ==============================================================================
 
-def changeText(txt):
+def set_serial_code(txt):
     global tv_QR_Code
-    print(f'change txt={txt}')
     tv_QR_Code.config(text=txt)
 
 
-def clearText():
+def clean_serial_code():
     global tv_QR_Code
     global qr_code_text
     tv_QR_Code.config(text='')
@@ -176,9 +195,46 @@ def clearText():
 
 
 def set_status(txt):
+    global window
     global tv_status
     tv_status.config(text=txt)
+    window.update()
 
+
+def table_insert(value):
+    global table
+    table.insert('', 0, value=value)
+
+
+def table_clean():
+    global table
+
+    for item in table.get_children():
+        table.delete(item)
+
+
+def create_new_csv():
+    storage.create()
+    table_clean()
+
+
+def calibration():
+    disable_input_btn()
+    set_status(status_message['wait_for_down'])
+    machine_down()
+    # wait_machine_response()
+    while GPIO.input(machine_input_pin):
+        pass
+
+    set_status(status_message['calibration'])
+    result = send_socket(action='cali', filename='cali', config_name='mic_default')
+    if result[0] == 'ok':
+        messagebox.showinfo(title='success', message=result[1])
+    elif result[0] == 'error':
+        messagebox.showerror(title='Error', message=result[1])
+
+    set_status(status_message['wait_for_press'])
+    enable_input_btn()
 
 # ==============================================================================
 #   Menu
@@ -189,11 +245,9 @@ new_item = Menu(menu, tearoff=0)
 menu.add_cascade(label='選項', menu=new_item)
 
 
-new_item.add_command(label='初始化', command=lambda: messagebox.showinfo('初始化', '初始化'))
+new_item.add_command(label='麥克風校正', command=calibration)
 new_item.add_separator()
-new_item.add_command(label='麥克風校正', command=lambda: messagebox.showinfo('麥克風校正', '麥克風校正'))
-new_item.add_separator()
-new_item.add_command(label='建立新CSV檔', command=lambda: storage.create())
+new_item.add_command(label='建立新CSV檔', command=create_new_csv)
 
 window.config(menu=menu)
 
@@ -205,7 +259,7 @@ def barcode():
     global qr_code_text
     # ser = serial.Serial('COM3', 115200, timeout=1)  # windows
     ser = serial.Serial('/dev/ttyACM0', 115200, timeout=1)  # linux
-    set_status('掃描中')
+    set_status(status_message['wait_for_scanner'])
     while True:
         try:
             read_data = ser.readline().decode('ascii')
@@ -214,11 +268,10 @@ def barcode():
                 ser.flush()
                 continue
             else:
-                changeText(read_data)
+                set_serial_code(read_data)
                 qr_code_text = read_data
                 print(f'read_data: {read_data}')
                 ser.flush()
-                set_status('掃描完成')
                 break
         except KeyboardInterrupt:
             ser.close()
@@ -227,17 +280,20 @@ def barcode():
 # ==============================================================================
 #   Smart Factory main methods
 # ==============================================================================
-def send_socket() -> str:
+def send_socket(action='all', filename=current_file_name, config_name=None) -> str:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client:
         client.connect(('127.0.0.1', config.port))
 
         while True:
             try:
-                request = json.dumps(['all', get_file_name(), 'default'])
+                request = json.dumps([action, filename, 'default', config_name])
                 client.send(request.encode())
 
                 read_data = json.loads(client.recv(4096).decode('utf-8'))
                 print(f'result: {read_data}')
+                if action == 'cali':
+                    return read_data
+
                 ok_count = 0
                 for item in read_data:
                     if item == 'OK':
@@ -270,54 +326,85 @@ def get_file_name() -> str:
 
 def start_analysis(event):
     global QR_code_switch
-    global button_lock
+    global current_file_name
 
-    print('press button')
-
-    if button_lock:
-        return
-    button_lock = True
+    disable_input_btn()
 
     if QR_code_switch.get() == 'on':
-        print('running barcode scanner')
         barcode()
-    else:
-        print('running analysis')
 
-    print(f"file name: {get_file_name()}")
+    current_file_name = get_file_name()
+    print(f"file name: {current_file_name}")
     print(f"device: {config.mic_default_name}")
 
-    set_status('等待汽缸下壓')
-    while GPIO.input(machine_pin):
-        pass
+    set_status(status_message['wait_for_down'])
+    machine_down()
+    wait_machine_response()     # 等待汽缸下壓
 
-    set_status('下壓完成')
-    time.sleep(1)
-    set_status('開始錄音')
-    result = send_socket()       # send data to server
+    set_status(status_message['recording'])
+    result = send_socket(filename=current_file_name, config_name='mic_default')       # send data to server
 
-    storage.write(time=datetime.datetime.now().strftime('%Y-%m-%d %H:%M'),
-                  filename=get_file_name(), code=qr_code_text,
+    timestr = datetime.datetime.now().strftime('%Y-%m-%m %H:%M')
+    table_insert([timestr, qr_code_text, current_file_name, result])
+    storage.write(time=timestr,
+                  filename=current_file_name, code=qr_code_text,
                   device=config.device_name, model=config.model_name,
                   result=result)
 
-    set_status('等待中')
-    clearText()
-    button_lock = False
+    set_status(status_message['wait_for_press'])
+    clean_serial_code()
+    machine_up()        # 汽缸歸位
+
+    # enable input button
+    enable_input_btn()
 
 
 # ==============================================================================
 #   GPIO
 # ==============================================================================
 input_pin = 18      # BCM model with GPIO 18, BOARD model with Pin 12. start button
-machine_pin = 4
+machine_input_pin = 4
+machine_output_pin = 23
 
 GPIO.setmode(GPIO.BCM)
 
 GPIO.setup(input_pin, GPIO.IN)
-GPIO.add_event_detect(input_pin, GPIO.FALLING, callback=start_analysis, bouncetime=2000)
+GPIO.add_event_detect(input_pin, GPIO.FALLING, callback=start_analysis, bouncetime=5000)
 
-GPIO.setup(machine_pin, GPIO.IN)        # 汽缸回傳訊號
+GPIO.setup(machine_input_pin, GPIO.IN)        # 汽缸回傳訊號
+GPIO.setup(machine_output_pin, GPIO.OUT, initial=GPIO.LOW)        # 汽缸控制訊號，高電位觸發
+
+
+def disable_input_btn() -> None:
+    GPIO.cleanup(input_pin)
+
+
+def enable_input_btn() -> None:
+    GPIO.setup(input_pin, GPIO.IN)
+    GPIO.add_event_detect(input_pin, GPIO.FALLING, callback=start_analysis, bouncetime=5000)
+
+
+def wait_machine_response() -> None:
+    """
+        等待汽缸回傳
+    """
+    while GPIO.input(machine_input_pin):
+        pass
+
+
+def machine_up() -> None:
+    """
+        汽缸上升
+    """
+    GPIO.output(machine_output_pin, GPIO.HIGH)
+
+
+def machine_down() -> None:
+    """
+        汽缸下壓
+    """
+    GPIO.output(machine_output_pin, GPIO.LOW)
+
 
 # ==============================================================================
 #   window main loop
