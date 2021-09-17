@@ -8,7 +8,6 @@ import re
 import os
 import shutil
 # from tensorflow.python.framework.ops import device
-from config import Configuration
 import time
 import tqdm
 import wave
@@ -31,6 +30,8 @@ from tensorflow.keras.models import load_model
 # thread
 from threading import Thread, Lock
 from multiprocessing import Process, Queue
+# configuration
+from config import Configuration
 
 # disable debugging logs
 # 0 -> all info
@@ -63,9 +64,15 @@ def my_mkdir(path: str) -> None:
             pass
 
 
-def wav_to_mp3() -> None:
+def wav_to_mp3(action=None, filename=None) -> None:
+    # convert folder all wav file or convert one wav file
+    if action == 'all':
+        search = '*.wav'
+    else:
+        search = f'{filename}.wav'
+
     # using to source folder
-    wav_files = glob.glob(SOURCE_PATH + '*.wav')
+    wav_files = glob.glob(SOURCE_PATH + search)
     for name in tqdm.tqdm(wav_files):
         file = name.split('/')[-1]
         filename = file.split('.')[0]
@@ -82,17 +89,26 @@ class Audio:
     DEVICE_1 = CONFIG.mic_1_name
     DEVICE_2 = CONFIG.mic_2_name
 
+    DEFAULT_CALI = CONFIG.mic_default_cali
+    MIC_1_CALI = CONFIG.mic_1_cali
+    MIC_2_CALI = CONFIG.mic_2_cali
+
+    DEFAULT = 'mic_default'
+    MIC_1 = 'mic_1'
+    MIC_2 = 'mic_2'
+
     framerate = CONFIG.framerate
     samples = CONFIG.samples
     sampwidth = CONFIG.sampwidth
     channels = CONFIG.channels
 
-    def __init__(self, filename, device='', second=CONFIG.second) -> None:
+    def __init__(self, filename, device='', second=CONFIG.second, config=DEFAULT) -> None:
         self.filename = filename
         self.record_data = b''
         self.device = device
         self.second = second + 1
         self.source_record_data = None
+        self.config_name = config
 
     def record(self) -> None:
         if self.hasDevice():
@@ -143,11 +159,14 @@ class Audio:
         b, a = bilinear(NUMs, DENs, self.framerate)
     
         data = np.frombuffer(self.record_data, dtype=np.short)
-        y = lfilter(b, a, data)
-    
-        self.record_data = y.astype(np.short).tobytes()
+        AW = lfilter(b, a, data)
 
-    def calibration(self) -> None:
+        cali = CONFIG.get_cali(self.config_name)
+        AWcali = AW / cali
+
+        self.record_data = AWcali.astype(np.short).tobytes()
+
+    def __calibration(self) -> None:
         ref = 0.00002
         source_data = np.frombuffer(self.source_record_data, dtype=np.short)
         AW = np.frombuffer(self.record_data, dtype=np.short)
@@ -157,6 +176,14 @@ class Audio:
         print(db)
         AWcali = AW / cali
         self.record_data = AWcali.astype(np.short).tobytes()
+
+    def set_calibration(self) -> None:
+        """
+            set calibration value
+        """
+        source_data = np.frombuffer(self.source_record_data, dtype=np.short)
+        cali = np.sqrt(np.mean(np.absolute(source_data)**2))
+        CONFIG.set_cali(self.config_name, cali)
 
     def getDeviceName(self) -> list:
         p = PyAudio()
@@ -432,12 +459,12 @@ class AI_analysis():
 # =============================================================================
 
 class SmartFactoryService():
-    def __init__(self, filename='', device='', queue=None, gpu_lock=None) -> None:
+    def __init__(self, filename='', device='', queue=None, gpu_lock=None, config=None) -> None:
         self.filename = filename
         self.queue = queue
         self.gpu_lock = gpu_lock
         self.device = device
-        self.au = Audio(self.filename, device=device)
+        self.au = Audio(self.filename, device=device, config=config)
 
     # action all, record -> to spectrogram -> AI analysis
     def all(self) -> None:
@@ -520,6 +547,14 @@ class SmartFactoryService():
         finally:
             gpu_lock.release()
 
+    def cali(self) -> None:
+        if self.au.hasDevice():
+            self.au.record()
+            self.au.set_calibration()
+            self.queue.put(['ok', 'calibration success'])
+        else:
+            self.queue.put(['error', 'has not found device'])
+
     def rm_init_file(self) -> None:
         boot_init_filename = 'boot_init'
         source_file = SOURCE_PATH + boot_init_filename + '.wav'
@@ -534,8 +569,6 @@ class SmartFactoryService():
             shutil.rmtree(spec_path)
         except OSError:
             pass
-
-
 
 
 # if __name__ == '__main__':
