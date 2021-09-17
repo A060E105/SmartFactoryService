@@ -25,20 +25,24 @@ class BaseModel(Model):
 class AI(BaseModel):
     id = AutoField()
     pro_serial = CharField()
-    mic_no = IntegerField()
+    device_name = CharField()
+    file_name = CharField()
+    test_time = CharField()
+    model_name = CharField()
     result = TextField()
 
     class Meta:
         table_name = 'ai_result'
 
 
-print('insert')
-
-AI.create(pro_serial='tteedd', mic_no='2', result=json.dumps(['NG', 'OK', 'NG', 'OK']))
-
-print('end')
-
-ai_list = AI.select()
-
-for item in ai_list:
-    print(f"id: {item.id}, pro_serial: {item.pro_serial}, mic_no: {item.mic_no}, result: {item.result}")
+# if __name__ == '__main__':
+#     print('insert')
+#
+#     AI.create(pro_serial='tteedd', mic_no='2', result=json.dumps(['NG', 'OK', 'NG', 'OK']))
+#
+#     print('end')
+#
+#     ai_list = AI.select()
+#
+#     for item in ai_list:
+#         print(f"id: {item.id}, pro_serial: {item.pro_serial}, mic_no: {item.mic_no}, result: {item.result}")

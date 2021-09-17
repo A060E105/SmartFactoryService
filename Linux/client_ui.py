@@ -19,6 +19,8 @@ from config import Configuration
 # write data to csv
 from storage import Storage
 
+from database import AI
+
 # GPIO
 import RPi.GPIO as GPIO
 
@@ -350,6 +352,9 @@ def start_analysis(event):
                   filename=current_file_name, code=qr_code_text,
                   device=config.device_name, model=config.model_name,
                   result=result)
+
+    AI.create(pro_serial=qr_code_text, device_name=config.device_name, file_name=current_file_name,
+              test_time=timestr, model_name=config.model_name, result=result)
 
     set_status(status_message['wait_for_press'])
     clean_serial_code()
