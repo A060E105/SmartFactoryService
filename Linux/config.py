@@ -48,7 +48,7 @@ class Configuration:
         return self.data['device']['mic_default']['name']
 
     @property
-    def mic_default_cali(self) -> int:
+    def mic_default_cali(self) -> float:
         return self.data['device']['mic_default']['calibration']
 
     @property
@@ -56,7 +56,7 @@ class Configuration:
         return self.data['device']['mic_1']['name']
 
     @property
-    def mic_1_cali(self) -> int:
+    def mic_1_cali(self) -> float:
         return self.data['device']['mic_1']['calibration']
 
     @property
@@ -64,7 +64,7 @@ class Configuration:
         return self.data['device']['mic_2']['name']
 
     @property
-    def mic_2_cali(self) -> int:
+    def mic_2_cali(self) -> float:
         return self.data['device']['mic_2']['calibration']
 
     @property
@@ -103,6 +103,20 @@ class Configuration:
     def status_message(self) -> list:
         return self.data['status_message']
 
+    def set_cali(self, config_name: str, value: float) -> None:
+        try:
+            self.data['device'][config_name]['calibration'] = value
+            self.save()
+        except KeyError:        # if the device name is invalid or does not exist then not working
+            pass
+
+    def get_cali(self, config_name: str) -> float:
+        try:
+            cali = self.data['device'][config_name]['calibration']
+            return cali
+        except KeyError:
+            pass
+
     # create configuration file
     def create(self) -> None:
         self.data['version'] = '1.0.0'
@@ -130,6 +144,10 @@ class Configuration:
         # status message
         self.data['status_message'] = {}
         self.data['status_message']['wait_for_press'] = '等待按下測試按鈕'
+        self.data['status_message']['wait_for_scanner'] = '等待 QR Code 掃描'
+        self.data['status_message']['wait_for_down'] = '汽缸作動中'
+        self.data['status_message']['recording'] = '分析中'
+        self.data['status_message']['calibration'] = '麥克風校正中'
 
     # read configuration file
     def read(self) -> None:
