@@ -80,6 +80,18 @@ def wav_to_mp3(action=None, filename=None) -> None:
         sound.export(SOURCE_PATH + filename + '.mp3', format='mp3')
 
 
+def rm_file(path='', filename=None) -> None:
+    file = path + filename
+    if os.path.exists(file):
+        os.remove(file)
+
+
+def backup(filename=None):
+    target = '/mnt/local_bk'
+    file = SOURCE_PATH + filename
+    shutil.move(file, target)
+
+
 # =============================================================================
 #   Audio class
 # =============================================================================
@@ -477,10 +489,8 @@ class SmartFactoryService():
             my_thread = Thread(self.comb_spec_AI(self.filename, gpu_lock=self.gpu_lock, queue=self.queue))
             my_thread.start()
             my_thread.join()
-            # Specgram(self.filename).toSpecgram()
-            # self.result = AI_analysis(self.filename).getResult()
-            # self.queue.put(self.result)
-            # print(self.result)
+            wav_to_mp3(filename=self.filename)
+            rm_file(path=SOURCE_PATH, filename=self.filename + '.wav')
         else:
             result = ["has not found device", "please check your device"]
             self.queue.put(result)
@@ -565,8 +575,8 @@ class SmartFactoryService():
             os.remove(source_file)
 
         try:
+            shutil.rmtree(spec_path)    # first remove spec
             shutil.rmtree(audio_path)
-            shutil.rmtree(spec_path)
         except OSError:
             pass
 
