@@ -97,10 +97,10 @@ def create_layout(div: tk.Frame):
     save_switch = tk.StringVar(value='local')
     btn_local = tk.Radiobutton(control_save_div, text='本地儲存', variable=save_switch, bg=primary_color,
                                indicatoron=False, value='local', width=10, font=radio_font)
-    btn_remote = tk.Radiobutton(control_save_div, text='遠端儲存', variable=save_switch, bg=primary_color,
-                                indicatoron=False, value='remote', width=10, font=radio_font)
+    # btn_remote = tk.Radiobutton(control_save_div, text='遠端儲存', variable=save_switch, bg=primary_color,
+    #                             indicatoron=False, value='remote', width=10, font=radio_font)
     btn_local.pack(side='left')
-    btn_remote.pack(side='left')
+    # btn_remote.pack(side='left')
 
     # title div
     title_div = tk.Frame(div, bg=primary_color)
@@ -328,6 +328,7 @@ def get_file_name() -> str:
 
 def start_analysis(event):
     global QR_code_switch
+    global save_switch
     global current_file_name
 
     disable_input_btn()
@@ -353,8 +354,10 @@ def start_analysis(event):
                   device=config.device_name, model=config.model_name,
                   result=result)
 
-    AI.create(pro_serial=qr_code_text, device_name=config.device_name, file_name=current_file_name,
-              test_time=timestr, model_name=config.model_name, result=result)
+    # remote
+    # if save_switch.get() == 'remote':
+    #     AI.create(pro_serial=qr_code_text, device_name=config.device_name, file_name=current_file_name,
+    #               test_time=timestr, model_name=config.model_name, result=result)
 
     set_status(status_message['wait_for_press'])
     clean_serial_code()
@@ -401,14 +404,14 @@ def machine_up() -> None:
     """
         汽缸上升
     """
-    GPIO.output(machine_output_pin, GPIO.HIGH)
+    GPIO.output(machine_output_pin, GPIO.LOW)
 
 
 def machine_down() -> None:
     """
         汽缸下壓
     """
-    GPIO.output(machine_output_pin, GPIO.LOW)
+    GPIO.output(machine_output_pin, GPIO.HIGH)
 
 
 # ==============================================================================
