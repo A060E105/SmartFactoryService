@@ -89,7 +89,11 @@ def rm_file(path='', filename=None) -> None:
 def backup(filename=None):
     target = '/mnt/local_bk'
     file = SOURCE_PATH + filename
-    shutil.move(file, target)
+
+    try:
+        shutil.move(file, target)
+    except PermissionError:
+        pass
 
 
 # =============================================================================
@@ -491,6 +495,7 @@ class SmartFactoryService():
             my_thread.join()
             wav_to_mp3(filename=self.filename)
             rm_file(path=SOURCE_PATH, filename=self.filename + '.wav')
+            backup(filename=self.filename + '.mp3')
         else:
             result = ["has not found device", "please check your device"]
             self.queue.put(result)
