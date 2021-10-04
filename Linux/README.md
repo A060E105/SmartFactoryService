@@ -4,6 +4,18 @@
 
 [User Interface](#user-interface)
 
+# pyarmor
+
+第一次先使用這個指令來產生`pytransform`這個資料夾：
+```bash
+$ pyarmor obfuscate <filename>
+```
+
+每個.py檔都執行過一次下方這個指令，以防止多線程找不到模組的問題
+```bash
+$ pyarmor obfuscate --restrict 1 --exact --no-runtime <filename>
+```
+
 # Configuration
 This is a smart factory configuration class, This class is a single instance, You can read and write configuration in any process.
 
