@@ -19,7 +19,7 @@ from config import Configuration
 # write data to csv
 from storage import Storage
 
-from database import AI
+# from database import AI
 
 # GPIO
 import RPi.GPIO as GPIO
@@ -260,8 +260,13 @@ window.config(menu=menu)
 def barcode():
     global qr_code_text
     # ser = serial.Serial('COM3', 115200, timeout=1)  # windows
-    ser = serial.Serial('/dev/ttyACM0', 115200, timeout=1)  # linux
-    set_status(status_message['wait_for_scanner'])
+    try:
+        ser = serial.Serial('/dev/ttyACM0', 115200, timeout=1)  # linux
+        set_status(status_message['wait_for_scanner'])
+    except serial.serialutil.SerialException:
+        messagebox.showerror(title='Error', message='無法連線Barcode Scanner\n1.確認Barcode Scanner正常連接\n2.更換Barcode Scanner')
+        return 1
+
     while True:
         try:
             read_data = ser.readline().decode('ascii')
@@ -334,7 +339,10 @@ def start_analysis(event):
     disable_input_btn()
 
     if QR_code_switch.get() == 'on':
-        barcode()
+        bar_result = barcode()
+        if bar_result:
+            enable_input_btn()
+            return
 
     current_file_name = get_file_name()
     print(f"file name: {current_file_name}")
