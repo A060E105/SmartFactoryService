@@ -35,6 +35,10 @@ class Configuration:
     def version(self) -> str:
         return self.data['version']
 
+    @version.setter
+    def version(self, new_version) -> None:
+        self.data['version'] = new_version
+
     @property
     def model_name(self) -> str:
         return self.data['model_name']

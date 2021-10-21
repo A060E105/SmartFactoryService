@@ -39,6 +39,7 @@ from config import Configuration
 # 2 -> info and warning message not print
 # 3 -> info, warning and error message not print
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '0'
+print(os.environ)
 
 # =======================================================
 #                   public variable 
@@ -50,9 +51,15 @@ SPEC_PATH = './spec/'
 
 MODEL = load_model('./' + CONFIG.model_name)
 
+
 # =======================================================
 #                   public methods 
 # =======================================================
+def show_env():
+    print(os.environ)
+    print(os.environ['HOME'])
+
+
 def my_mkdir(path: str) -> None:
     now_path = ''
     for i in path.split('\\'):
@@ -217,6 +224,9 @@ class Audio:
         info = p.get_host_api_info_by_index(0)
         numdevices = info.get('deviceCount')
         # print("numdevices %s" %(numdevices))
+        print(f'connected devices: {self.getDeviceName()}')
+        print(f'configuration device name: {CONFIG.mic_default_name}')
+        print(f'self device name: {self.device}')
         for i in range(0, numdevices):
             if (p.get_device_info_by_host_api_device_index(0, i).get('maxInputChannels')) > 0:
                 if ((re.search(device_name, p.get_device_info_by_host_api_device_index(0, i).get('name'))) is not None):
@@ -479,8 +489,8 @@ class SmartFactoryService():
         self.filename = filename
         self.queue = queue
         self.gpu_lock = gpu_lock
-        self.device = device
-        self.au = Audio(self.filename, device=device, config=config)
+        self.device = 'Cotron EZM-001'
+        self.au = Audio(self.filename, device=self.device, config=config)
 
     # action all, record -> to spectrogram -> AI analysis
     def all(self) -> None:
