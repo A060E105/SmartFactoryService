@@ -104,7 +104,7 @@ class Configuration:
         return self.data['server']['port']
 
     @property
-    def status_message(self) -> list:
+    def status_message(self) -> dict:
         return self.data['status_message']
 
     def set_cali(self, config_name: str, value: float) -> None:

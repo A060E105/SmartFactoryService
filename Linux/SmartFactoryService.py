@@ -32,6 +32,7 @@ from threading import Thread, Lock
 from multiprocessing import Process, Queue
 # configuration
 from config import Configuration
+from storage import storage as STORAGE
 
 # disable debugging logs
 # 0 -> all info
@@ -39,7 +40,6 @@ from config import Configuration
 # 2 -> info and warning message not print
 # 3 -> info, warning and error message not print
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '0'
-print(os.environ)
 
 # =======================================================
 #                   public variable 
@@ -55,10 +55,6 @@ MODEL = load_model('./' + CONFIG.model_name)
 # =======================================================
 #                   public methods 
 # =======================================================
-def show_env():
-    print(os.environ)
-    print(os.environ['HOME'])
-
 
 def my_mkdir(path: str) -> None:
     now_path = ''
@@ -93,14 +89,36 @@ def rm_file(path='', filename=None) -> None:
         os.remove(file)
 
 
-def backup(filename=None):
+def backup(filename=None, result='') -> None:
     target = '/mnt/local_bk'
     file = SOURCE_PATH + filename
 
+    # create NG/OK folder
+    for folder in AI_analysis.my_class:
+        path = os.path.join(target, STORAGE.filename, folder)
+        my_mkdir(path)
+
     try:
-        shutil.move(file, target)
+        target_path = os.path.join(target, STORAGE.filename, result)
+        shutil.move(file, target_path)
     except PermissionError:
         pass
+
+
+def parser_result(results: list) -> str:
+    ok_count = 0
+    for item in results:
+        # 計算 OK 的數量
+        if item == 'OK':
+            ok_count += 1
+
+    # OK 的數量必須大於一半
+    if ok_count > len(results) / 2:
+        result = 'OK'
+    else:
+        result = 'NG'
+
+    return result
 
 
 # =============================================================================
@@ -224,9 +242,9 @@ class Audio:
         info = p.get_host_api_info_by_index(0)
         numdevices = info.get('deviceCount')
         # print("numdevices %s" %(numdevices))
-        print(f'connected devices: {self.getDeviceName()}')
-        print(f'configuration device name: {CONFIG.mic_default_name}')
-        print(f'self device name: {self.device}')
+        # print(f'connected devices: {self.getDeviceName()}')
+        # print(f'configuration device name: {CONFIG.mic_default_name}')
+        # print(f'self device name: {self.device}')
         for i in range(0, numdevices):
             if (p.get_device_info_by_host_api_device_index(0, i).get('maxInputChannels')) > 0:
                 if ((re.search(device_name, p.get_device_info_by_host_api_device_index(0, i).get('name'))) is not None):
@@ -503,11 +521,17 @@ class SmartFactoryService():
             my_thread = Thread(self.comb_spec_AI(self.filename, gpu_lock=self.gpu_lock, queue=self.queue))
             my_thread.start()
             my_thread.join()
+            analysis_result = self.queue.get()
+            self.queue.put(analysis_result)
             wav_to_mp3(filename=self.filename)
             rm_file(path=SOURCE_PATH, filename=self.filename + '.wav')
-            backup(filename=self.filename + '.mp3')
+            backup(filename=self.filename + '.mp3', result=parser_result(analysis_result.get('result')))
         else:
-            result = ["has not found device", "please check your device"]
+            # result = ["has not found device", "please check your device"]
+            result = {
+                'status': 2,
+                'result': []
+            }
             self.queue.put(result)
 
     # action two, only record
@@ -567,7 +591,11 @@ class SmartFactoryService():
         gpu_lock.acquire()
         try:
             Specgram(filename).toSpecgram()
-            result = AI_analysis(filename).getResult()
+            # result = AI_analysis(filename).getResult()
+            result = {
+                'status': 0,
+                'result': AI_analysis(filename).getResult()
+            }
             queue.put(result)
         finally:
             gpu_lock.release()
@@ -576,9 +604,17 @@ class SmartFactoryService():
         if self.au.hasDevice():
             self.au.record()
             self.au.set_calibration()
-            self.queue.put(['ok', 'calibration success'])
+            result = {
+                'status': 0,
+                'result': ['calibration success']
+            }
+            self.queue.put(result)
         else:
-            self.queue.put(['error', 'has not found device'])
+            result = {
+                'status': 2,
+                'result': []
+            }
+            self.queue.put(result)
 
     def rm_init_file(self) -> None:
         boot_init_filename = 'boot_init'

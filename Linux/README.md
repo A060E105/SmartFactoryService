@@ -16,53 +16,11 @@ $ pyarmor obfuscate <filename>
 $ pyarmor obfuscate --restrict 1 --exact --no-runtime <filename>
 ```
 
-# Configuration
-This is a smart factory configuration class, This class is a single instance, You can read and write configuration in any process.
+# Version
 
-## property
-| name | return type |
-|:---:|:---:|
-| version | string |
-| mic_1_name | string |
-| mic_1_cali | string |
-| mic_2_name | string |
-| mic_2_cali | string |
-| second | int |
-| framerate | int |
-| samples | int |
-| sampwidth | int |
-| channels | int |
-| with_cut_file | bool |
-| save_split_audio | bool |
-| port | int |
-
-
-## methods
-
-### create(self)
-```
-Description:
-    create configuration file content
-```
-
-### read(self)
-```
-Description:
-    read configuration file
-```
-
-### save(self)
-```
-Description:
-    save configuration to file
-```
-
-
-
-# All in One structure
-
-## workflow
-1. create UI
-2. create a thread for the read USB serial port data in a QR Code scanner
-3. show QR code in UI
-4. hide QR code before recording, or after show 3~5 seconds do it.
+## 1.3.0
+新增功能：
+* 顯示錯誤訊息
+* 顯示分析結果
+* 新增CSV檔的資料夾
+* 將分析完的音檔備份至同CSV檔名的資料夾內，裡面有NG/OK資料夾，會依據分析結果進行備份。
