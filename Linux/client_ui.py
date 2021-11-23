@@ -462,6 +462,7 @@ def wait_machine_response() -> None:
     """
     while GPIO.input(MACHINE_INPUT_PIN):
         pass
+    time.sleep(2)
 
 
 def machine_up() -> None:
