@@ -150,6 +150,7 @@ class Audio:
         self.second = second + 1
         self.source_record_data = None
         self.config_name = config
+        self.record_data_cali = b''
 
     def record(self) -> None:
         if self.hasDevice():
@@ -181,6 +182,12 @@ class Audio:
         wf.setframerate(self.framerate)
         wf.writeframes(self.record_data)
         wf.close()
+        wf = wave.open(f"{SOURCE_PATH}{self.filename}_cali.wav", 'wb')
+        wf.setnchannels(self.channels)
+        wf.setsampwidth(self.sampwidth)
+        wf.setframerate(self.framerate)
+        wf.writeframes(self.record_data_cali)
+        wf.close()
 
     def A_weighting(self) -> None:
         f1 = 20.598997
@@ -205,7 +212,8 @@ class Audio:
         cali = CONFIG.get_cali(self.config_name)
         AWcali = AW / cali
 
-        self.record_data = AWcali.astype(np.short).tobytes()
+        self.record_data_cali = AWcali.astype(np.short).tobytes()
+        self.record_data = AW.astype(np.short).tobytes()
 
     def __calibration(self) -> None:
         ref = 0.00002

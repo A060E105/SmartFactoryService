@@ -72,6 +72,10 @@ class Configuration:
         return self.data['device']['mic_2']['calibration']
 
     @property
+    def delay_time(self) -> int:
+        return self.data.get('delay_time', 0)
+
+    @property
     def second(self) -> int:
         return self.data['audio']['second']
 
@@ -131,6 +135,8 @@ class Configuration:
         self.data['device']['mic_default'] = {'name': 'Cotron EZM-001-2', 'calibration': 1}
         self.data['device']['mic_1'] = {'name': 'Cotron EZM-001-1', 'calibration': 1}
         self.data['device']['mic_2'] = {'name': 'Cotron EZM-001-2', 'calibration': 1}
+        # before analysis the unit is second
+        self.data['delay_time'] = 2
         # audio settings
         self.data['audio'] = {}
         self.data['audio']['second'] = 5
