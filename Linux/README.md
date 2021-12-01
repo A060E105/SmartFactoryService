@@ -18,6 +18,13 @@ $ pyarmor obfuscate --restrict 1 --exact --no-runtime <filename>
 
 # Version
 
+## 1.3.5
+新增功能：
+* 移除另外儲存cali音檔功能
+
+修復問題：
+* 麥克風校正數值不正確
+
 ## 1.3.4
 新增功能：
 * 儲存cali音檔
