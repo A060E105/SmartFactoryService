@@ -18,6 +18,10 @@ $ pyarmor obfuscate --restrict 1 --exact --no-runtime <filename>
 
 # Version
 
+## 1.4.0
+新增功能：
+* 啟動程式時自動掛載行動硬碟，若掛載失敗將跳出錯誤提醒。
+
 ## 1.3.5
 新增功能：
 * 移除另外儲存cali音檔功能

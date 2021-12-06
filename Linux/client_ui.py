@@ -3,34 +3,32 @@
     email: s106003041@g.ksu.edu.tw
     description:
 """
+import datetime
 import json
-from os import path
+import re
+import socket
+# check device mount
+import subprocess
+from subprocess import PIPE
+import time
 import tkinter as tk
+import tkinter.font as tkFont
 from tkinter import Menu
 from tkinter import messagebox
 from tkinter.ttk import Progressbar
-import tkinter.font as tkFont
-import time
-import datetime
+
+# GPIO
+import RPi.GPIO as GPIO
+# thread
+# barcode
+import serial
 
 # config
 from config import Configuration
-
 # write data to csv
 from storage import storage as STORAGE
 
 # from database import AI
-
-# GPIO
-import RPi.GPIO as GPIO
-
-import socket
-
-# thread
-import threading
-from multiprocessing import Queue
-# barcode
-import serial
 
 # ==============================================================================
 #   Global variable
@@ -289,6 +287,32 @@ def init_menu():
     WINDOW.config(menu=menu)
 
 
+def mount_device():
+    """
+    掛載外接式磁碟
+
+    :return:
+    """
+    passwd = b'1234qwer\n'
+    p = subprocess.Popen(['sudo', '-S', 'mount', '-a'], stdin=PIPE, stdout=PIPE)
+    sudo_prompt = p.communicate(passwd)[1]
+    return sudo_prompt
+
+
+def check_device_mount():
+    """
+    檢查外接磁碟是否掛載
+
+    :return:
+    """
+    df = subprocess.run(['df'], stdout=PIPE, universal_newlines=True)
+    is_mount = re.search('local', df.stdout)
+    if is_mount:
+        pass
+    else:
+        messagebox.showerror(title='錯誤', message='外接式硬碟掛載失敗\n確認正確連接後，請重啟本程式')
+
+
 # ==============================================================================
 #   bar code
 # ==============================================================================
@@ -484,6 +508,8 @@ def machine_down() -> None:
 # ==============================================================================
 init_layout()
 init_menu()
+mount_device()
+check_device_mount()
 WINDOW.mainloop()
 GPIO.cleanup()
 print('end program')
