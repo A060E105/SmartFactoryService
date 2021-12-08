@@ -516,20 +516,27 @@ class SmartFactoryService():
     def all(self) -> None:
         # print(*self.au.getDeviceName(), sep = ", ")
         # print(self.au.getDeviceName())
-        if self.au.hasDevice():
-            self.au.record()
-            self.au.A_weighting()
-            self.au.save_wav()
-            my_thread = Thread(self.comb_spec_AI(self.filename, gpu_lock=self.gpu_lock, queue=self.queue))
-            my_thread.start()
-            my_thread.join()
-            analysis_result = self.queue.get()
-            self.queue.put(analysis_result)
-            wav_to_mp3(filename=self.filename)
-            rm_file(path=SOURCE_PATH, filename=self.filename + '.wav')
-            backup(filename=self.filename + '.mp3', result=parser_result(analysis_result.get('result')))
-        else:
-            # result = ["has not found device", "please check your device"]
+        try:
+            if self.au.hasDevice():
+                self.au.record()
+                self.au.A_weighting()
+                self.au.save_wav()
+                my_thread = Thread(self.comb_spec_AI(self.filename, gpu_lock=self.gpu_lock, queue=self.queue))
+                my_thread.start()
+                my_thread.join()
+                analysis_result = self.queue.get()
+                self.queue.put(analysis_result)
+                wav_to_mp3(filename=self.filename)
+                rm_file(path=SOURCE_PATH, filename=self.filename + '.wav')
+                backup(filename=self.filename + '.mp3', result=parser_result(analysis_result.get('result')))
+            else:
+                # result = ["has not found device", "please check your device"]
+                result = {
+                    'status': 2,
+                    'result': []
+                }
+                self.queue.put(result)
+        except:
             result = {
                 'status': 2,
                 'result': []
@@ -575,7 +582,7 @@ class SmartFactoryService():
 
     # action boot_init
     def boot_init(self) -> None:
-        boot_au = Audio("boot_init", device=self.device, second=2)
+        boot_au = Audio("boot_init", device=self.device, second=5)
         if boot_au.hasDevice():
             boot_au.record()    # first record with error
             time.sleep(5)       # delay 5 second

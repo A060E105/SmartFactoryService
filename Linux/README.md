@@ -18,6 +18,10 @@ $ pyarmor obfuscate --restrict 1 --exact --no-runtime <filename>
 
 # Version
 
+## 1.4.1
+新增功能：
+* 錄音出現錯誤時會拋出例外處理，並回傳麥克風錯誤的代碼。
+
 ## 1.4.0
 新增功能：
 * 啟動程式時自動掛載行動硬碟，若掛載失敗將跳出錯誤提醒。
