@@ -18,6 +18,10 @@ $ pyarmor obfuscate --restrict 1 --exact --no-runtime <filename>
 
 # Version
 
+## 1.4.2
+新增功能：
+* 修改掛載行動硬碟方式。
+
 ## 1.4.1
 新增功能：
 * 錄音出現錯誤時會拋出例外處理，並回傳麥克風錯誤的代碼。

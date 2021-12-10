@@ -294,7 +294,7 @@ def mount_device():
     :return:
     """
     passwd = b'1234qwer\n'
-    p = subprocess.Popen(['sudo', '-S', 'mount', '-a'], stdin=PIPE, stdout=PIPE)
+    p = subprocess.Popen(['sudo', '-S', 'mount', '/dev/sda1', '/mnt/local_bk'], stdin=PIPE, stdout=PIPE)
     sudo_prompt = p.communicate(passwd)[1]
     return sudo_prompt
 
