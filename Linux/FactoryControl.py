@@ -1,5 +1,9 @@
 import abc
-import RPi.GPIO as GPIO
+import platform
+
+if platform.system() == 'Linux':
+    import RPi.GPIO as GPIO
+
 import serial
 import time
 from pynput.keyboard import Key, Listener
@@ -56,48 +60,49 @@ class SerialIO(__IOCtrlAbstract):
         pass
 
 
-class MyGPIO(__IOCtrlAbstract):
-    def __init__(self, start_pin: int, machine_tx: int, machine_rx: int) -> None:
-        self.__start_pin = start_pin
-        self.__machine_tx = machine_tx
-        self.__machine_rx = machine_rx
-        self.__instance = None
-        self.__enable_callback = None
-        GPIO.setwarnings(False)
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setup(self.__start_pin, GPIO.IN)
-        GPIO.setup(self.__machine_rx, GPIO.IN)
-        GPIO.setup(self.__machine_tx, GPIO.OUT, initial=GPIO.LOW)
+if platform.system() == 'Linux':
+    class MyGPIO(__IOCtrlAbstract):
+        def __init__(self, start_pin: int, machine_tx: int, machine_rx: int) -> None:
+            self.__start_pin = start_pin
+            self.__machine_tx = machine_tx
+            self.__machine_rx = machine_rx
+            self.__instance = None
+            self.__enable_callback = None
+            GPIO.setwarnings(False)
+            GPIO.setmode(GPIO.BCM)
+            GPIO.setup(self.__start_pin, GPIO.IN)
+            GPIO.setup(self.__machine_rx, GPIO.IN)
+            GPIO.setup(self.__machine_tx, GPIO.OUT, initial=GPIO.LOW)
 
-    def set_callback(self, instance):
-        self.__instance = instance
-        self.enable()
+        def set_callback(self, instance):
+            self.__instance = instance
+            self.enable()
 
-    def machine_down(self):
-        print('GPIO 汽缸下壓')
-        GPIO.output(self.__machine_tx, GPIO.HIGH)
+        def machine_down(self):
+            print('GPIO 汽缸下壓')
+            GPIO.output(self.__machine_tx, GPIO.HIGH)
 
-    def machine_up(self):
-        print('GPIO 汽缸上升')
-        GPIO.output(self.__machine_tx, GPIO.LOW)
+        def machine_up(self):
+            print('GPIO 汽缸上升')
+            GPIO.output(self.__machine_tx, GPIO.LOW)
 
-    def wait_machine_response(self):
-        print('GPIO 等待汽缸回傳')
-        while GPIO.input(self.__machine_rx):
+        def wait_machine_response(self):
+            print('GPIO 等待汽缸回傳')
+            while GPIO.input(self.__machine_rx):
+                pass
+
+        def enable(self):
+            print('GPIO enable start button')
+            GPIO.add_event_detect(self.__start_pin, GPIO.FALLING, callback=self.__instance, bouncetime=5000)
+
+        def disable(self):
+            print('GPIO disable start button')
+            GPIO.remove_event_detect(self.__start_pin)
             pass
 
-    def enable(self):
-        print('GPIO enable start button')
-        GPIO.add_event_detect(self.__start_pin, GPIO.FALLING, callback=self.__instance, bouncetime=5000)
-
-    def disable(self):
-        print('GPIO disable start button')
-        GPIO.remove_event_detect(self.__start_pin)
-        pass
-
-    def cleanup(self):
-        GPIO.cleanup()
-        print('GPIO cleanup')
+        def cleanup(self):
+            GPIO.cleanup()
+            print('GPIO cleanup')
 
 
 class VirtualIO(__IOCtrlAbstract):
@@ -171,18 +176,6 @@ class IOCtrl(__IOCtrlAbstract):
         self.__instance.cleanup()
 
 
-if __name__ == '__main__':
-    gpio = MyGPIO(15, 16, 18)
-    # gpio.start()
-    # gpio.machine_down()
-    # gpio.wait_machine_response()
-    # gpio.machine_up()
-    ser = SerialIO('/dev', 115200)
-    # ser.start()
-    # ser.machine_down()
-    # ser.wait_machine_response()
-    # ser.machine_up()
-    IO = IOCtrl(ser)
-    IO.machine_down()
-    IO.wait_machine_response()
-    IO.machine_up()
+# ==============================================================================
+# ------------------------------------ END -------------------------------------
+# ==============================================================================

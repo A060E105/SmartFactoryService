@@ -25,6 +25,7 @@ from numpy.lib import stride_tricks
 from matplotlib import pyplot as plt
 # AI analysis
 import glob
+import tensorflow as tf
 from tensorflow.keras.preprocessing import image
 from tensorflow.keras.models import load_model
 # thread
@@ -48,6 +49,16 @@ CONFIG = Configuration()
 SOURCE_PATH = './source/'
 AUDIO_OUT_PATH = './audio/'
 SPEC_PATH = './spec/'
+
+gpus = tf.config.list_physical_devices('GPU')
+if gpus:
+  # Restrict TensorFlow to only allocate 1GB of memory on the first GPU
+  try:
+      tf.config.set_logical_device_configuration(
+          gpus[0],
+          [tf.config.LogicalDeviceConfiguration(memory_limit=1024)])
+  except RuntimeError as e:
+      print(e)
 
 MODEL = load_model('./' + CONFIG.model_name)
 
