@@ -7,6 +7,7 @@ import datetime
 import json
 import re
 import socket
+import platform
 # check device mount
 import subprocess
 from subprocess import PIPE
@@ -17,11 +18,15 @@ from tkinter import Menu
 from tkinter import messagebox
 from tkinter.ttk import Progressbar
 
-# GPIO
-import RPi.GPIO as GPIO
 # thread
 # barcode
 import serial
+
+# I/O Control
+if platform.system() == 'Linux':
+    from FactoryControl import IOCtrl, MyGPIO, VirtualIO
+else:
+    from FactoryControl import IOCtrl, VirtualIO
 
 # config
 from config import Configuration
@@ -293,10 +298,11 @@ def mount_device():
 
     :return:
     """
-    passwd = b'1234qwer\n'
-    p = subprocess.Popen(['sudo', '-S', 'mount', '/dev/sda1', '/mnt/local_bk'], stdin=PIPE, stdout=PIPE)
-    sudo_prompt = p.communicate(passwd)[1]
-    return sudo_prompt
+    if platform.system() == 'Linux':
+        passwd = b'1234qwer\n'
+        p = subprocess.Popen(['sudo', '-S', 'mount', '/dev/sda1', '/mnt/local_bk'], stdin=PIPE, stdout=PIPE)
+        sudo_prompt = p.communicate(passwd)[1]
+        return sudo_prompt
 
 
 def check_device_mount():
@@ -305,12 +311,13 @@ def check_device_mount():
 
     :return:
     """
-    df = subprocess.run(['df'], stdout=PIPE, universal_newlines=True)
-    is_mount = re.search('local', df.stdout)
-    if is_mount:
-        pass
-    else:
-        messagebox.showerror(title='錯誤', message='外接式硬碟掛載失敗\n確認正確連接後，請重啟本程式')
+    if platform.system() == 'Linux':
+        df = subprocess.run(['df'], stdout=PIPE, universal_newlines=True)
+        is_mount = re.search('local', df.stdout)
+        if is_mount:
+            pass
+        else:
+            messagebox.showerror(title='錯誤', message='外接式硬碟掛載失敗\n確認正確連接後，請重啟本程式')
 
 
 # ==============================================================================
@@ -459,33 +466,33 @@ START_INPUT_PIN = 18      # BCM model with GPIO 18, BOARD model with Pin 12. sta
 MACHINE_INPUT_PIN = 4
 MACHINE_OUTPUT_PIN = 23
 
-GPIO.setmode(GPIO.BCM)
-
-GPIO.setup(START_INPUT_PIN, GPIO.IN)
-GPIO.add_event_detect(START_INPUT_PIN, GPIO.FALLING, callback=start_analysis, bouncetime=5000)
-
-GPIO.setup(MACHINE_INPUT_PIN, GPIO.IN)        # 汽缸回傳訊號
-GPIO.setup(MACHINE_OUTPUT_PIN, GPIO.OUT, initial=GPIO.LOW)        # 汽缸控制訊號，高電位觸發
+if platform.system() == 'Linux':
+    # On Linux platform using GPIO Control
+    gpio = MyGPIO(START_INPUT_PIN, MACHINE_OUTPUT_PIN, MACHINE_INPUT_PIN)
+    gpio.set_callback(start_analysis)
+    io_ctrl = IOCtrl(gpio)
+else:
+    virtual_io = VirtualIO()
+    virtual_io.set_callback(start_analysis)
+    io_ctrl = IOCtrl(virtual_io)
 
 
 def disable_start_btn() -> None:
-    GPIO.cleanup(START_INPUT_PIN)
+    io_ctrl.disable()
 
 
 def enable_start_btn() -> None:
     """
         監聽啟動按鈕
     """
-    GPIO.setup(START_INPUT_PIN, GPIO.IN)
-    GPIO.add_event_detect(START_INPUT_PIN, GPIO.FALLING, callback=start_analysis, bouncetime=5000)
+    io_ctrl.enable()
 
 
 def wait_machine_response() -> None:
     """
         等待汽缸回傳
     """
-    while GPIO.input(MACHINE_INPUT_PIN):
-        pass
+    io_ctrl.wait_machine_response()
     time.sleep(CONFIG.delay_time)
 
 
@@ -493,14 +500,14 @@ def machine_up() -> None:
     """
         汽缸上升
     """
-    GPIO.output(MACHINE_OUTPUT_PIN, GPIO.LOW)
+    io_ctrl.machine_up()
 
 
 def machine_down() -> None:
     """
         汽缸下壓
     """
-    GPIO.output(MACHINE_OUTPUT_PIN, GPIO.HIGH)
+    io_ctrl.machine_down()
 
 
 # ==============================================================================
@@ -511,6 +518,6 @@ init_menu()
 mount_device()
 check_device_mount()
 WINDOW.mainloop()
-GPIO.cleanup()
+io_ctrl.cleanup()
 print('end program')
 

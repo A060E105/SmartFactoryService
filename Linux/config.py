@@ -76,6 +76,10 @@ class Configuration:
         return self.data.get('delay_time', 0)
 
     @property
+    def backup_path(self) -> str:
+        return self.data.get('backup_path', './backup')
+
+    @property
     def second(self) -> int:
         return self.data['audio']['second']
 
@@ -137,6 +141,8 @@ class Configuration:
         self.data['device']['mic_2'] = {'name': 'Cotron EZM-001-2', 'calibration': 1}
         # before analysis the unit is second
         self.data['delay_time'] = 2
+        # backup audio path
+        self.data['backup_path'] = './backup'
         # audio settings
         self.data['audio'] = {}
         self.data['audio']['second'] = 5

@@ -3,7 +3,7 @@
     audio class
     hello world
 """
-
+import platform
 import re
 import os
 import shutil
@@ -42,6 +42,7 @@ from storage import storage as STORAGE
 # 3 -> info, warning and error message not print
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '0'
 
+plt.switch_backend('agg')   # 解決在非GUI環境下無法執行的問題
 # =======================================================
 #                   public variable 
 # =======================================================
@@ -101,7 +102,7 @@ def rm_file(path='', filename=None) -> None:
 
 
 def backup(filename=None, result='') -> None:
-    target = '/mnt/local_bk'
+    target = CONFIG.backup_path
     file = SOURCE_PATH + filename
 
     # create NG/OK folder
@@ -453,6 +454,7 @@ class Specgram():
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         return img
 
+
 # =============================================================================
 #   AI analysis class
 # =============================================================================
@@ -485,7 +487,6 @@ class AI_analysis():
 
     def getResult(self) -> list:
         file_path = os.path.join('spec', '0~10000', self.filename)
-        # f_names = glob.glob(file_path + '\*.png')
         f_names = glob.glob(file_path + '/*.png')
 
         img = []
@@ -547,7 +548,8 @@ class SmartFactoryService():
                     'result': []
                 }
                 self.queue.put(result)
-        except:
+        except Exception as exc:
+            print(f'SmartFactoryService all exception: {str(exc)}')
             result = {
                 'status': 2,
                 'result': []
