@@ -7,3 +7,9 @@
 .idea/
 *.conf
 __pycache__
+.SmartFactory.cache
+CSV/
+source/
+spec/
+audio/
+backup/
