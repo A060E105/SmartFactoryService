@@ -35,6 +35,8 @@ from multiprocessing import Process, Queue
 from config import Configuration
 from storage import storage as STORAGE
 
+from Logger import get_logger
+
 # disable debugging logs
 # 0 -> all info
 # 1 -> info message not print
@@ -47,19 +49,20 @@ plt.switch_backend('agg')   # 解決在非GUI環境下無法執行的問題
 #                   public variable 
 # =======================================================
 CONFIG = Configuration()
+log = get_logger()
 SOURCE_PATH = './source/'
 AUDIO_OUT_PATH = './audio/'
 SPEC_PATH = './spec/'
 
 gpus = tf.config.list_physical_devices('GPU')
 if gpus:
-  # Restrict TensorFlow to only allocate 1GB of memory on the first GPU
-  try:
-      tf.config.set_logical_device_configuration(
-          gpus[0],
-          [tf.config.LogicalDeviceConfiguration(memory_limit=1024)])
-  except RuntimeError as e:
-      print(e)
+    # Restrict TensorFlow to only allocate 1GB of memory on the first GPU
+    try:
+        tf.config.set_logical_device_configuration(
+            gpus[0],
+            [tf.config.LogicalDeviceConfiguration(memory_limit=1024)])
+    except RuntimeError as e:
+        log.exception(e)
 
 MODEL = load_model('./' + CONFIG.model_name)
 
@@ -225,9 +228,9 @@ class Audio:
         source_data = np.frombuffer(self.source_record_data, dtype=np.short)
         AW = np.frombuffer(self.record_data, dtype=np.short)
         cali = np.sqrt(np.mean(np.absolute(source_data)**2))
-        print(cali)
+        log.debug(f'cali: {cali}')
         db = 20*np.log10(np.sqrt(np.mean(np.absolute(self.source_record_data)**2))/(ref*cali))
-        print(db)
+        log.debug(f'db: {db}')
         AWcali = AW / cali
         self.record_data = AWcali.astype(np.short).tobytes()
 
@@ -270,12 +273,10 @@ class Audio:
             return True
 
         if self.__getDevice(self.device) is None:
-            # return False
-            # develop test
-            print("has not device")
+            log.warning("has not device")
             return False
         else:
-            print("has device")
+            log.debug("has device")
             return True
 
 
@@ -549,7 +550,7 @@ class SmartFactoryService():
                 }
                 self.queue.put(result)
         except Exception as exc:
-            print(f'SmartFactoryService all exception: {str(exc)}')
+            log.exception(f'SmartFactoryService all exception: {str(exc)}')
             result = {
                 'status': 2,
                 'result': []
