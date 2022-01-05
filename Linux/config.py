@@ -131,7 +131,7 @@ class Configuration:
 
     # create configuration file
     def create(self) -> None:
-        self.data['version'] = '1.0.0'
+        self.data['version'] = '2.0.0'
         self.data['model_name'] = 'model.h5'
         self.data['device_name'] = "A"
         # device settings

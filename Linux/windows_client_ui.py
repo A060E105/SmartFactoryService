@@ -1,6 +1,7 @@
 """
     author: Jin-Mo,Lin
     email: s106003041@g.ksu.edu.tw
+    Version: 2.0.0
     description: Windows platform client UI
 """
 import datetime
