@@ -10,6 +10,7 @@ import socket
 import platform
 # check device mount
 import subprocess
+import threading
 from subprocess import PIPE
 import time
 import tkinter as tk
@@ -18,10 +19,7 @@ from tkinter import Menu
 from tkinter import messagebox
 from tkinter.ttk import Progressbar
 
-# thread
-# barcode
-import serial
-
+import os
 import sys
 sys.path.append('')
 
@@ -35,16 +33,20 @@ else:
 from config import Configuration
 # write data to csv
 from storage import storage as STORAGE
+# logger
+from Logger import get_logger
 
 # from database import AI
 
 # ==============================================================================
 #   Global variable
 # ==============================================================================
+log = get_logger()
 CONFIG = Configuration()
-# STORAGE = Storage()
 STATUS_MESSAGE = CONFIG.status_message
 SAVE_SWITCH: tk.StringVar = None
+SERVER_STATUS_DIV: tk.Frame = None
+SERVER_STATUS_TEXT: tk.Label = None
 TV_QR_CODE: tk.Label = None
 TV_STATUS: tk.Label = None
 TABLE: tk.ttk.Treeview = None
@@ -81,6 +83,8 @@ def defined_layout_weight(obj, cols=1, rows=1):
 def create_layout(div: tk.Frame):
     global WINDOW
     global SAVE_SWITCH
+    global SERVER_STATUS_DIV
+    global SERVER_STATUS_TEXT
     global TV_QR_CODE
     global TV_STATUS
     global RESULT
@@ -103,6 +107,14 @@ def create_layout(div: tk.Frame):
                                bg=UI.get('color').get('primary_color'),
                                indicatoron=False, value='local', width=10, font=radio_font)
     btn_local.pack(side='left')
+
+    # server status div
+    SERVER_STATUS_DIV = tk.Frame(div, bg='yellow', padx=5, pady=5)
+    SERVER_STATUS_DIV.place(relx=0.7, rely=0.05)
+
+    SERVER_STATUS_TEXT = tk.Label(SERVER_STATUS_DIV)
+    SERVER_STATUS_TEXT.config(text='系統初始化中', bg=UI.get('color').get('primary_color'), font=FONT)
+    SERVER_STATUS_TEXT.pack(side='left')
 
     # control div
     control_div = tk.Frame(div, bg=UI.get('color').get('primary_color'))
@@ -261,17 +273,34 @@ def hide_result() -> None:
     WINDOW.update()
 
 
+def restart_server() -> None:
+    """
+    重新啟動系統伺服器
+
+    :return: None
+    """
+    execute_path = os.path.join(os.path.expanduser('~'), '.conda', 'envs', 'SmartFactory', 'pythonw.exe')
+    os.system('taskkill /im pythonw.exe /f')    # kill pythonw execute
+    os.system(f'start {execute_path} thread_server.py')
+    log.info('restart system')
+    threading.Thread(target=check_server_start).start()
+
+
 # ==============================================================================
 #   Menu
 # ==============================================================================
 def init_menu():
     menu = Menu(WINDOW)
     new_item = Menu(menu, tearoff=0)
+    server_item = Menu(menu, tearoff=0)
 
     menu.add_cascade(label='選項', menu=new_item)
     # new_item.add_command(label='麥克風校正', command=calibration)
     # new_item.add_separator()
     new_item.add_command(label='建立新CSV檔', command=create_new_csv)
+
+    menu.add_cascade(label='系統', menu=server_item)
+    server_item.add_command(label='重新啟動', command=restart_server)
 
     WINDOW.config(menu=menu)
 
@@ -282,7 +311,10 @@ def init_menu():
 def show_error(code):
     parser_error_code = {
         1: '系統正在初始化中，請稍後一分鐘再進行操作。',
-        2: '請檢查麥克風裝置是否連接。'
+        2: '請檢查麥克風裝置是否連接。',
+        3: '無效的動作指令。',
+        4: '檔案名稱不可為空。',
+        5: '麥克風正在使用中，請稍後再進行操作。'
     }
     # msg = '請重新啟動程式，或重新開機。'
     error_code = f'Error code[{code}]'
@@ -308,7 +340,7 @@ def send_socket(action='all', filename='', config_name=None) -> dict:
                 finally:
                     client.close()
     except Exception:
-        print('connection fail')
+        log.info('connection fail')
         return {'status': 1, 'result': ['']}
 
 
@@ -332,6 +364,7 @@ def start_analysis(event):
 
     set_status(STATUS_MESSAGE['recording'])
     response = send_socket(filename=current_file_name, config_name='mic_default')       # send data to server
+    log.debug(f'response: {response}')
 
     try:
         if response.get('status'):
@@ -372,6 +405,61 @@ def btn_start_analysis():
     start_analysis('')
 
 
+def check_server_start() -> None:
+    """
+    檢查伺服器是否啟動，需與 threading.Thread 配合
+
+    :return: None
+    """
+    server_initialized()    # UI show initialized message
+    for _ in range(5):
+        result = send_socket('check', 'check')
+        if result.get('status') == 'OK':
+            server_start_success()      # UI show success message
+            log.info('server has start')
+            return
+        time.sleep(6)
+
+    server_start_fail()     # UI show fail message
+    log.info('server has not start')
+
+
+def server_start_success() -> None:
+    """
+    伺服器正常啟動
+
+    :return: None
+    """
+    global SERVER_STATUS_DIV
+    global SERVER_STATUS_TEXT
+    SERVER_STATUS_DIV.config(bg=UI.get('color').get('success_color'))
+    SERVER_STATUS_TEXT.config(text='系統已啟動')
+
+
+def server_start_fail() -> None:
+    """
+    伺服器未啟動
+
+    :return: None
+    """
+    global SERVER_STATUS_DIV
+    global SERVER_STATUS_TEXT
+    SERVER_STATUS_DIV.config(bg=UI.get('color').get('error_color'))
+    SERVER_STATUS_TEXT.config(text='系統未啟動')
+
+
+def server_initialized() -> None:
+    """
+    伺服器初始化中
+
+    :return: None
+    """
+    global SERVER_STATUS_DIV
+    global SERVER_STATUS_TEXT
+    SERVER_STATUS_DIV.config(bg='yellow')
+    SERVER_STATUS_TEXT.config(text='系統初始化中')
+
+
 # ==============================================================================
 #   I/O Control
 # ==============================================================================
@@ -400,6 +488,8 @@ def enable_start_btn() -> None:
 # ==============================================================================
 init_layout()
 init_menu()
+# TODO(): check server has start method
+threading.Thread(target=check_server_start).start()
 WINDOW.mainloop()
 io_ctrl.cleanup()
 print('end program')
