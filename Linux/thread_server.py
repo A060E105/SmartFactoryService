@@ -79,7 +79,7 @@ class ClientThread(threading.Thread):
                 config_name = None
 
             if action not in action_list:       # check action has or hasn't been defined
-                self.csocket.send(json.dumps({'status': 3, 'msg': 'invalid action'}).encode())
+                self.csocket.send(json.dumps({'status': 3, 'result': ['invalid action']}).encode())
                 break
 
             if action == 'check':       # check server has start
@@ -87,13 +87,13 @@ class ClientThread(threading.Thread):
                 break
 
             if not filename:        # check filename is empty
-                self.csocket.send(json.dumps({'status': 4, 'result': 'filename can\'t empty'}))
+                self.csocket.send(json.dumps({'status': 4, 'result': ['filename can\'t empty']}))
                 break
 
             if device_name in microphones:       # check microphone has or hasn't been defined
                 if microphones_status[device_name].isLock:
                     if action in action_list[:2]:
-                        self.csocket.send(json.dumps({'status': 5, 'result': 'this device on using.'}).encode())
+                        self.csocket.send(json.dumps({'status': 5, 'result': ['this device on using.']}).encode())
                         break
                 device = microphones[device_name]
                 microphones_status[device_name].lock()  # lock microphone device
