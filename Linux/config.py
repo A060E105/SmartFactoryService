@@ -80,6 +80,10 @@ class Configuration:
         return self.data.get('backup_path', './backup')
 
     @property
+    def remote_backup_path(self) -> str:
+        return self.data.get('remote_backup_path', '')
+
+    @property
     def second(self) -> int:
         return self.data['audio']['second']
 
@@ -143,6 +147,8 @@ class Configuration:
         self.data['delay_time'] = 2
         # backup audio path
         self.data['backup_path'] = './backup'
+        # remote backup audio path
+        self.data['remote_backup_path'] = ''
         # audio settings
         self.data['audio'] = {}
         self.data['audio']['second'] = 5
