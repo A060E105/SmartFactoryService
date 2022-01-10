@@ -122,7 +122,7 @@ def backup(filename=None, result='') -> None:
         log.warning('Backup exception is Permission error')
         pass
     except:
-        log.exception('Backup exception')
+        log.exception('Backup exception', exc_info=False)
 
 
 def remote_backup(filename=None, result='') -> None:
@@ -150,7 +150,7 @@ def remote_backup(filename=None, result='') -> None:
             log.warning('Remote Backup exception is Permission error')
             pass
         except:
-            log.exception('Remote Backup exception')
+            log.exception('Remote Backup exception', exc_info=False)
 
 
 def parser_result(results: list) -> str:
