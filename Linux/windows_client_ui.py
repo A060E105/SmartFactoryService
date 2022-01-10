@@ -408,6 +408,18 @@ def btn_start_analysis():
     start_analysis('')
 
 
+def check_remote_backup_path() -> None:
+    """
+    檢查遠端備份的路徑是否存在
+
+    :return: None
+    """
+    backup_path = CONFIG.remote_backup_path.replace('\\', '/')
+    if not os.path.exists(backup_path):
+        log.warning(f'not found remote backup path')
+        messagebox.showwarning('警告', '找不到遠端備份路徑')
+
+
 def check_server_start(reconnected: bool = False) -> None:
     """
     檢查伺服器是否啟動，需與 threading.Thread 配合
@@ -503,6 +515,7 @@ init_layout()
 init_menu()
 # TODO(): check server has start method
 threading.Thread(target=check_server_start).start()
+threading.Thread(target=check_remote_backup_path).start()
 WINDOW.mainloop()
 io_ctrl.cleanup()
 print('end program')
