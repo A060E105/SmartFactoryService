@@ -31,6 +31,7 @@ from tensorflow.keras.models import load_model
 # thread
 from threading import Thread, Lock
 from multiprocessing import Process, Queue
+from collections import namedtuple
 # configuration
 from config import Configuration
 from storage import storage as STORAGE
@@ -106,6 +107,7 @@ def rm_file(path='', filename=None) -> None:
 
 def backup(filename=None, result='') -> None:
     target = CONFIG.backup_path
+    target = target.replace('\\', '/')
     file = SOURCE_PATH + filename
 
     # create NG/OK folder
@@ -117,7 +119,38 @@ def backup(filename=None, result='') -> None:
         target_path = os.path.join(target, STORAGE.filename, result)
         shutil.move(file, target_path)
     except PermissionError:
+        log.warning('Backup exception is Permission error')
         pass
+    except:
+        log.exception('Backup exception')
+
+
+def remote_backup(filename=None, result='') -> None:
+    """
+    備份至遠端目錄
+
+    :param filename:
+    :param result:
+    :return:
+    """
+    target = CONFIG.remote_backup_path
+    target = target.replace('\\', '/')
+    if target != '':    # 路徑不為空才執行遠端備份
+        file = SOURCE_PATH + filename
+
+        # create NG/OK folder
+        for folder in AI_analysis.my_class:
+            path = os.path.join(target, STORAGE.filename, folder)
+            my_mkdir(path)
+
+        try:
+            target_path = os.path.join(target, STORAGE.filename, result, filename)
+            shutil.copyfile(file, target_path)
+        except PermissionError:
+            log.warning('Remote Backup exception is Permission error')
+            pass
+        except:
+            log.exception('Remote Backup exception')
 
 
 def parser_result(results: list) -> str:
@@ -516,8 +549,9 @@ class AI_analysis():
 # =============================================================================
 #    Smart Factory Service
 # =============================================================================
+class SmartFactoryService:
+    Result = namedtuple('Result', ['status', 'model', 'result'])
 
-class SmartFactoryService():
     def __init__(self, filename='', device='', queue=None, gpu_lock=None, config=None) -> None:
         self.filename = filename
         self.queue = queue
@@ -541,20 +575,23 @@ class SmartFactoryService():
                 self.queue.put(analysis_result)
                 wav_to_mp3(filename=self.filename)
                 rm_file(path=SOURCE_PATH, filename=self.filename + '.wav')
+                remote_backup(filename=self.filename + '.mp3', result=parser_result(analysis_result.get('result')))
                 backup(filename=self.filename + '.mp3', result=parser_result(analysis_result.get('result')))
             else:
                 # result = ["has not found device", "please check your device"]
-                result = {
-                    'status': 2,
-                    'result': []
-                }
+                # result = {
+                #     'status': 2,
+                #     'result': []
+                # }
+                result = dict(self.Result(status=2, model=[], result=[])._asdict())
                 self.queue.put(result)
         except Exception as exc:
             log.exception(f'SmartFactoryService all exception: {str(exc)}')
-            result = {
-                'status': 2,
-                'result': []
-            }
+            # result = {
+            #     'status': 2,
+            #     'result': []
+            # }
+            result = dict(self.Result(status=2, model=[], result=[])._asdict())
             self.queue.put(result)
 
     # action two, only record
@@ -615,10 +652,11 @@ class SmartFactoryService():
         try:
             Specgram(filename).toSpecgram()
             # result = AI_analysis(filename).getResult()
-            result = {
-                'status': 0,
-                'result': AI_analysis(filename).getResult()
-            }
+            # result = {
+            #     'status': 0,
+            #     'result': AI_analysis(filename).getResult()
+            # }
+            result = dict(self.Result(status=0, model=[], result=AI_analysis(filename).getResult())._asdict())
             queue.put(result)
         finally:
             gpu_lock.release()
@@ -627,16 +665,18 @@ class SmartFactoryService():
         if self.au.hasDevice():
             self.au.record()
             self.au.set_calibration()
-            result = {
-                'status': 0,
-                'result': ['calibration success']
-            }
+            # result = {
+            #     'status': 0,
+            #     'result': ['calibration success']
+            # }
+            result = dict(self.Result(status=0, model=[], result=[])._asdict())
             self.queue.put(result)
         else:
-            result = {
-                'status': 2,
-                'result': []
-            }
+            # result = {
+            #     'status': 2,
+            #     'result': []
+            # }
+            result = dict(self.Result(status=2, model=[], result=[])._asdict())
             self.queue.put(result)
 
     def rm_init_file(self) -> None:
