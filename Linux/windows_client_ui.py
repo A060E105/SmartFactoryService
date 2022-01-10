@@ -252,6 +252,7 @@ def calibration() -> None:
         messagebox.showinfo(title='success', message=result[0])
     except BaseException:
         show_error(response.get('status'))
+        threading.Thread(target=check_server_start, args=(True,)).start()
     finally:
         set_status(STATUS_MESSAGE['wait_for_press'])
         enable_start_btn()
@@ -311,7 +312,7 @@ def init_menu():
 # ==============================================================================
 def show_error(code):
     parser_error_code = {
-        1: '系統正在初始化中，請稍後一分鐘再進行操作。',
+        1: '系統沒有回應，重新連接中。',
         2: '請檢查麥克風裝置是否連接。',
         3: '無效的動作指令。',
         4: '檔案名稱不可為空。',
@@ -397,6 +398,7 @@ def start_analysis(event):
         #               test_time=timestr, model_name=config.model_name, result=result)
     except BaseException:
         show_error(response.get('status'))
+        threading.Thread(target=check_server_start, args=(True,)).start()
     finally:
         set_status(STATUS_MESSAGE['wait_for_press'])
         enable_start_btn()  # enable start button
@@ -406,14 +408,17 @@ def btn_start_analysis():
     start_analysis('')
 
 
-def check_server_start() -> None:
+def check_server_start(reconnected: bool = False) -> None:
     """
     檢查伺服器是否啟動，需與 threading.Thread 配合
 
+    :param reconnected:
     :return: None
     """
     server_initialized()    # UI show initialized message
-    for _ in range(5):
+    for i in range(5):
+        if reconnected:
+            reconnected_server(i + 1)
         result = send_socket('check', 'check')
         if result.get('status') == 'OK':
             server_start_success()      # UI show success message
@@ -459,6 +464,13 @@ def server_initialized() -> None:
     global SERVER_STATUS_TEXT
     SERVER_STATUS_DIV.config(bg='yellow')
     SERVER_STATUS_TEXT.config(text='系統初始化中')
+
+
+def reconnected_server(count: int) -> None:
+    global SERVER_STATUS_DIV
+    global SERVER_STATUS_TEXT
+    SERVER_STATUS_DIV.config(bg='yellow')
+    SERVER_STATUS_TEXT.config(text=f'重新連接中...{count}')
 
 
 # ==============================================================================
