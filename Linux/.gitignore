@@ -13,3 +13,6 @@ source/
 spec/
 audio/
 backup/
+build/
+dist/
+*.log
