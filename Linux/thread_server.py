@@ -76,7 +76,7 @@ class ClientThread(threading.Thread):
             try:
                 config_name = request[3]
             except IndexError:
-                config_name = None
+                config_name = 'mic_default'
 
             if action not in action_list:       # check action has or hasn't been defined
                 self.csocket.send(json.dumps({'status': 3, 'result': ['invalid action']}).encode())
