@@ -160,8 +160,8 @@ def parser_result(results: list) -> str:
         if item == 'OK':
             ok_count += 1
 
-    # OK 的數量必須大於一半
-    if ok_count > len(results) / 2:
+    # OK 的數量必須大於設定值
+    if (ok_count / len(results)) > CONFIG.result_ratio:
         result = 'OK'
     else:
         result = 'NG'
@@ -575,8 +575,8 @@ class SmartFactoryService:
                 self.queue.put(analysis_result)
                 wav_to_mp3(filename=self.filename)
                 rm_file(path=SOURCE_PATH, filename=self.filename + '.wav')
-                remote_backup(filename=self.filename + '.mp3', result=parser_result(analysis_result.get('result')))
-                backup(filename=self.filename + '.mp3', result=parser_result(analysis_result.get('result')))
+                remote_backup(filename=self.filename + '.mp3', result=analysis_result.get('result'))
+                backup(filename=self.filename + '.mp3', result=analysis_result.get('result'))
             else:
                 # result = ["has not found device", "please check your device"]
                 # result = {
@@ -656,7 +656,9 @@ class SmartFactoryService:
             #     'status': 0,
             #     'result': AI_analysis(filename).getResult()
             # }
-            result = dict(self.Result(status=0, model=[], result=AI_analysis(filename).getResult())._asdict())
+            response = AI_analysis(filename).getResult()
+            response = parser_result(response)
+            result = dict(self.Result(status=0, model=[CONFIG.model_name], result=[response])._asdict())
             queue.put(result)
         finally:
             gpu_lock.release()

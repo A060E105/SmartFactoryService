@@ -48,6 +48,13 @@ class Configuration:
         return self.data['device_name']
 
     @property
+    def result_ratio(self) -> float:
+        ratio = self.data.get('result_ratio', 50)
+        if ratio > 100 or ratio <= 0:
+            ratio = 100
+        return ratio / 100
+
+    @property
     def mic_default_name(self) -> str:
         return self.data['device']['mic_default']['name']
 
@@ -138,6 +145,7 @@ class Configuration:
         self.data['version'] = '2.0.0'
         self.data['model_name'] = 'model.h5'
         self.data['device_name'] = "A"
+        self.data['result_ratio'] = 50
         # device settings
         self.data['device'] = {}
         self.data['device']['mic_default'] = {'name': 'Cotron EZM-001-2', 'calibration': 1}
