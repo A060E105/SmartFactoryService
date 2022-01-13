@@ -118,6 +118,7 @@ class ClientThread(threading.Thread):
 
             result_list = queue.get()
             result = json.dumps(result_list)
+            result += '\r\n'
             microphones_status[device_name].unlock()   # unlock microphone device
             self.csocket.send(result.encode())
             self.csocket.close()
