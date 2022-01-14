@@ -122,6 +122,7 @@ def backup(filename=None, result='') -> None:
         log.warning('Backup exception is Permission error')
         pass
     except:
+        log.exception('Backup exception', exc_info=False)
         pass
 
 
@@ -150,6 +151,7 @@ def remote_backup(filename=None, result='') -> None:
             log.warning('Remote Backup exception is Permission error')
             pass
         except:
+            log.exception('Remote Backup exception', exc_info=False)
             pass
 
 
@@ -575,8 +577,8 @@ class SmartFactoryService:
                 self.queue.put(analysis_result)
                 wav_to_mp3(filename=self.filename)
                 rm_file(path=SOURCE_PATH, filename=self.filename + '.wav')
-                remote_backup(filename=self.filename + '.mp3', result=analysis_result.get('result'))
-                backup(filename=self.filename + '.mp3', result=analysis_result.get('result'))
+                remote_backup(filename=self.filename + '.mp3', result=analysis_result.get('result')[0])
+                backup(filename=self.filename + '.mp3', result=analysis_result.get('result')[0])
             else:
                 # result = ["has not found device", "please check your device"]
                 # result = {
