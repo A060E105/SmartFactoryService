@@ -254,7 +254,7 @@ class Audio:
 
         CONFIG.read()
         cali = CONFIG.get_cali(self.config_name)
-        AWcali = AW / float(cali)
+        AWcali = AW * float(cali)
 
         self.record_data = AWcali.astype(np.short).tobytes()
 
@@ -275,7 +275,7 @@ class Audio:
         """
         source_data = np.frombuffer(self.record_data, dtype=np.short)
         source_data = source_data / 32768
-        cali = np.sqrt(np.mean(np.absolute(source_data)**2))
+        cali = 0.2 / (np.sqrt(np.mean(np.absolute(source_data)**2)))
         CONFIG.set_cali(self.config_name, cali)
 
     def getDeviceName(self) -> list:
