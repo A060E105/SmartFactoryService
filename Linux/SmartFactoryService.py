@@ -95,7 +95,8 @@ def wav_to_mp3(action=None, filename=None) -> None:
     for name in tqdm.tqdm(wav_files):
         file = name.split('/')[-1]
         filename = file.split('.')[0]
-        sound = AudioSegment.from_mp3(name)
+        # sound = AudioSegment.from_mp3(name)
+        sound = AudioSegment.from_wav(name)
         sound.export(SOURCE_PATH + filename + '.mp3', format='mp3')
 
 
@@ -197,7 +198,7 @@ class Audio:
         self.filename = filename
         self.record_data = b''
         self.device = device
-        self.second = second + 1
+        self.second = second
         self.source_record_data = None
         self.config_name = config
 
@@ -576,7 +577,7 @@ class SmartFactoryService:
                 analysis_result = self.queue.get()
                 self.queue.put(analysis_result)
                 wav_to_mp3(filename=self.filename)
-                rm_file(path=SOURCE_PATH, filename=self.filename + '.wav')
+                # rm_file(path=SOURCE_PATH, filename=self.filename + '.wav')
                 remote_backup(filename=self.filename + '.mp3', result=analysis_result.get('result')[0])
                 backup(filename=self.filename + '.mp3', result=analysis_result.get('result')[0])
             else:
@@ -673,7 +674,7 @@ class SmartFactoryService:
             #     'status': 0,
             #     'result': ['calibration success']
             # }
-            result = dict(self.Result(status=0, model=[], result=[])._asdict())
+            result = dict(self.Result(status=0, model=[], result=['Calibration Success'])._asdict())
             self.queue.put(result)
         else:
             # result = {
