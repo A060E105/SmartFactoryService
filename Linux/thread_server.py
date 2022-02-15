@@ -12,6 +12,9 @@ from Logger import get_logger
 
 import os
 import sys
+from datetime import datetime
+
+expire = datetime(2024, 2, 1)   # 過期時間
 
 if sys.executable.endswith("pythonw.exe"):
     sys.stdout = open(os.devnull, 'w')
@@ -103,22 +106,27 @@ class ClientThread(threading.Thread):
             sfs = SFS.SmartFactoryService(filename=filename, device=device, queue=queue,
                                           gpu_lock=gpu_lock, config=config_name)
 
-            if action == action_list[0]:
-                sfs.all()
-            elif action == action_list[1]:
-                sfs.rec_only()
-            elif action == action_list[2]:
-                microphones_status[device_name].unlock()  # unlock microphone device
-                sfs.spec_only()
-            elif action == action_list[3]:
-                microphones_status[device_name].unlock()  # unlock microphone device
-                sfs.spec_ai()
-            elif action == action_list[4]:
-                sfs.cali()
+            today = datetime.today()
+            if expire > today:      # 是否過期
+                if action == action_list[0]:
+                    sfs.all()
+                elif action == action_list[1]:
+                    sfs.rec_only()
+                elif action == action_list[2]:
+                    microphones_status[device_name].unlock()  # unlock microphone device
+                    sfs.spec_only()
+                elif action == action_list[3]:
+                    microphones_status[device_name].unlock()  # unlock microphone device
+                    sfs.spec_ai()
+                elif action == action_list[4]:
+                    sfs.cali()
 
-            result_list = queue.get()
-            result = json.dumps(result_list)
-            result += '\r\n'
+                result_list = queue.get()
+                result = json.dumps(result_list)
+                result += '\r\n'
+            else:
+                result = json.dumps({'status': 0, 'result': ['???']})
+
             microphones_status[device_name].unlock()   # unlock microphone device
             self.csocket.send(result.encode())
             self.csocket.close()
