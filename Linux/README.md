@@ -18,6 +18,11 @@ $ pyarmor obfuscate --restrict 1 --exact --no-runtime <filename>
 
 # Version
 
+## 2.2.0
+新增功能：
+* 錄音時間調整
+* 麥克風校正前先做 A-weighting 處理
+
 ## 1.4.2
 新增功能：
 * 修改掛載行動硬碟方式。
