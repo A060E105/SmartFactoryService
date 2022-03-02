@@ -13,6 +13,7 @@ import tqdm
 import wave
 import numpy as np
 from pyaudio import PyAudio, paInt16
+import soundfile
 from pydub import AudioSegment      # wav to mp3
 # A-weighting
 from numpy import pi, polymul
@@ -198,7 +199,7 @@ class Audio:
         self.filename = filename
         self.record_data = b''
         self.device = device
-        self.second = second
+        self.second = second + 0.5
         self.source_record_data = None
         self.config_name = config
 
@@ -259,6 +260,23 @@ class Audio:
 
         self.record_data = AWcali.astype(np.short).tobytes()
 
+    def __A_weighting(self, fs):
+        f1 = 20.598997
+        f2 = 107.65265
+        f3 = 737.86223
+        f4 = 12194.217
+        A1000 = 1.9997
+
+        NUMs = [(2 * pi * f4) ** 2 * (10 ** (A1000 / 20)), 0, 0, 0, 0]
+        DENs = polymul([1, 4 * pi * f4, (2 * pi * f4) ** 2],
+                       [1, 4 * pi * f1, (2 * pi * f1) ** 2])
+        DENs = polymul(polymul(DENs, [1, 2 * pi * f3]),
+                       [1, 2 * pi * f2])
+
+        # Use the bilinear transformation to get the digital filter.
+        # (Octave, MATLAB, and PyLab disagree about Fs vs 1/Fs)
+        return bilinear(NUMs, DENs, fs)
+
     def __calibration(self) -> None:
         ref = 0.00002
         source_data = np.frombuffer(self.source_record_data, dtype=np.short)
@@ -274,9 +292,18 @@ class Audio:
         """
             set calibration value
         """
-        source_data = np.frombuffer(self.record_data, dtype=np.short)
-        source_data = source_data / 32768
-        cali = 0.2 / (np.sqrt(np.mean(np.absolute(source_data)**2)))
+        # source_data = np.frombuffer(self.record_data, dtype=np.short)
+        # source_data = source_data / 32768
+        # source_data = source_data / 16384
+        ref = 0.00002
+        cali_path = os.path.join(SOURCE_PATH, 'cali.wav')
+        source_data, fs = soundfile.read(cali_path)
+        b, a = self.__A_weighting(fs)
+        AW_data = lfilter(b, a, source_data)
+        cali = 0.2 / (np.sqrt(np.mean(np.absolute(AW_data)**2)))
+        log.debug(f'cali: {cali}')
+        db = 20*np.log10(np.sqrt(np.mean(np.absolute(AW_data)**2))/(ref*cali))
+        log.debug(f'db: {db}')
         CONFIG.set_cali(self.config_name, cali)
 
     def getDeviceName(self) -> list:
@@ -667,9 +694,12 @@ class SmartFactoryService:
             gpu_lock.release()
 
     def cali(self) -> None:
-        if self.au.hasDevice():
-            self.au.record()
-            self.au.set_calibration()
+        cali_au = Audio('cali', device=self.device, second=5)
+        if cali_au.hasDevice():
+            cali_au.record()
+            cali_au.save_wav()
+            cali_au.set_calibration()
+            rm_file(path=SOURCE_PATH, filename='cali.wav')
             # result = {
             #     'status': 0,
             #     'result': ['calibration success']
