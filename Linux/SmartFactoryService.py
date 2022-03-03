@@ -288,9 +288,9 @@ class Audio:
         AWcali = AW / cali
         self.record_data = AWcali.astype(np.short).tobytes()
 
-    def set_calibration(self) -> None:
+    def get_calibration(self) -> float:
         """
-            set calibration value
+        get calibration value
         """
         # source_data = np.frombuffer(self.record_data, dtype=np.short)
         # source_data = source_data / 32768
@@ -304,7 +304,8 @@ class Audio:
         log.debug(f'cali: {cali}')
         db = 20*np.log10(np.sqrt(np.mean(np.absolute(AW_data)**2))/(ref*cali))
         log.debug(f'db: {db}')
-        CONFIG.set_cali(self.config_name, cali)
+        # CONFIG.set_cali(self.config_name, cali)
+        return cali
 
     def getDeviceName(self) -> list:
         p = PyAudio()
@@ -587,6 +588,7 @@ class SmartFactoryService:
         self.queue = queue
         self.gpu_lock = gpu_lock
         self.device = 'Cotron EZM-001'
+        self.config_name = config
         self.au = Audio(self.filename, device=self.device, config=config)
 
     # action all, record -> to spectrogram -> AI analysis
@@ -693,26 +695,45 @@ class SmartFactoryService:
         finally:
             gpu_lock.release()
 
-    def cali(self) -> None:
+    def auto_cali(self) -> None:
+        """
+        microphone calibration and save value to config
+        """
         cali_au = Audio('cali', device=self.device, second=5)
         if cali_au.hasDevice():
             cali_au.record()
             cali_au.save_wav()
-            cali_au.set_calibration()
+            CONFIG.set_cali(self.config_name, cali_au.get_calibration())
             rm_file(path=SOURCE_PATH, filename='cali.wav')
-            # result = {
-            #     'status': 0,
-            #     'result': ['calibration success']
-            # }
-            result = dict(self.Result(status=0, model=[], result=['Calibration Success'])._asdict())
+            result = dict(self.Result(status=0, model=[], result=['Success'])._asdict())
             self.queue.put(result)
         else:
-            # result = {
-            #     'status': 2,
-            #     'result': []
-            # }
             result = dict(self.Result(status=2, model=[], result=[])._asdict())
             self.queue.put(result)
+
+    def get_cali(self) -> None:
+        """
+        get microphone calibration value
+        """
+        cali_au = Audio('cali', device=self.device, second=5)
+        if cali_au.hasDevice():
+            cali_au.record()
+            cali_au.save_wav()
+            cali = cali_au.get_calibration()
+            rm_file(path=SOURCE_PATH, filename='cali.wav')
+            result = dict(self.Result(status=0, model=[], result=[cali])._asdict())
+            self.queue.put(result)
+        else:
+            result = dict(self.Result(status=2, model=[], result=[])._asdict())
+            self.queue.put(result)
+
+    def set_cali(self, value) -> None:
+        """
+        set microphone calibration value save to config
+        """
+        CONFIG.set_cali(self.config_name, value)
+        result = dict(self.Result(status=0, model=[], result=['Save Success'])._asdict())
+        self.queue.put(result)
 
     def rm_init_file(self) -> None:
         boot_init_filename = 'boot_init'

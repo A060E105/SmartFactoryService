@@ -27,7 +27,7 @@ CONFIG = Configuration()
 
 microphones = {'1': Audio.DEVICE_1, '2': Audio.DEVICE_2, 'default': Audio.DEVICE_DEFAULT, 'test': 'test'}
 
-action_list = ["all", 'rec_only', 'spec_only', 'spec_ai', 'cali', 'check']
+action_list = ["all", 'rec_only', 'spec_only', 'spec_ai', 'get_cali', 'set_cali', 'check']
 
 microphones_status = {}
 
@@ -118,8 +118,11 @@ class ClientThread(threading.Thread):
                 elif action == action_list[3]:
                     microphones_status[device_name].unlock()  # unlock microphone device
                     sfs.spec_ai()
-                elif action == action_list[4]:
-                    sfs.cali()
+                elif action == action_list[4]:  # get calibration
+                    sfs.get_cali()
+                elif action == action_list[5]:  # set calibration
+                    cali_value = float(request[1])
+                    sfs.set_cali(cali_value)
 
                 result_list = queue.get()
                 result = json.dumps(result_list)

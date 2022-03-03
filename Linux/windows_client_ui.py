@@ -243,13 +243,18 @@ def calibration() -> None:
     disable_start_btn()
 
     set_status(STATUS_MESSAGE['calibration'])
-    response = send_socket(action='cali', filename='cali', config_name='mic_default')
+    response = send_socket(action='get_cali', filename='cali', config_name='mic_default')
     try:
         if response.get('status'):
             raise BaseException
 
         result = response.get('result')
-        messagebox.showinfo(title='success', message=result[0])
+        messagebox.showinfo(title='Success', message=f"Calibration Success")
+        msg_response = messagebox.askquestion(title='Do you want to save?', message=f'Cali: {result[0]}')
+        if msg_response == 'yes':
+            set_response = send_socket(action='set_cali', filename=result[0], config_name='mic_default')
+            set_result = set_response.get('result')
+            messagebox.showinfo(title='Success', message=set_result[0])
     except BaseException:
         show_error(response.get('status'))
         threading.Thread(target=check_server_start, args=(True,)).start()
