@@ -18,6 +18,13 @@ $ pyarmor obfuscate --restrict 1 --exact --no-runtime <filename>
 
 # Version
 
+## 2.3.0
+新增功能：
+* 麥克風校正 API 拆分成兩隻
+    * 取得麥克風校正值
+    * 設定麥克風校正值
+* window_client_ui 麥克風校正後會詢問是否儲存該校正值
+
 ## 2.2.0
 新增功能：
 * 錄音時間調整
