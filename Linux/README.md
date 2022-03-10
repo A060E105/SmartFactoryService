@@ -18,6 +18,10 @@ $ pyarmor obfuscate --restrict 1 --exact --no-runtime <filename>
 
 # Version
 
+## 2.3.1
+新增功能：
+* 取得麥克風校正值會同時拿到舊的校正值與新的校正值
+
 ## 2.3.0
 新增功能：
 * 麥克風校正 API 拆分成兩隻

@@ -250,9 +250,10 @@ def calibration() -> None:
 
         result = response.get('result')
         messagebox.showinfo(title='Success', message=f"Calibration Success")
-        msg_response = messagebox.askquestion(title='Do you want to save?', message=f'Cali: {result[0]}')
+        msg_response = messagebox.askquestion(title='Do you want to save?',
+                                              message=f'Old Cali: {result[0]}\nNew Cali: {result[1]}')
         if msg_response == 'yes':
-            set_response = send_socket(action='set_cali', filename=result[0], config_name='mic_default')
+            set_response = send_socket(action='set_cali', filename=result[1], config_name='mic_default')
             set_result = set_response.get('result')
             messagebox.showinfo(title='Success', message=set_result[0])
     except BaseException:

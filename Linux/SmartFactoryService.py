@@ -721,7 +721,7 @@ class SmartFactoryService:
             cali_au.save_wav()
             cali = cali_au.get_calibration()
             rm_file(path=SOURCE_PATH, filename='cali.wav')
-            result = dict(self.Result(status=0, model=[], result=[cali])._asdict())
+            result = dict(self.Result(status=0, model=[], result=[CONFIG.get_cali(self.config_name), cali])._asdict())
             self.queue.put(result)
         else:
             result = dict(self.Result(status=2, model=[], result=[])._asdict())
