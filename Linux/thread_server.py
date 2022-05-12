@@ -68,6 +68,7 @@ class ClientThread(threading.Thread):
             device = ''
             queue = Queue()
             request = json.loads(self.csocket.recv(2048).decode('utf-8'))
+            print(f"request: {request}")
             action = request[0]
             filename = request[1]
 
@@ -90,7 +91,7 @@ class ClientThread(threading.Thread):
                 break
 
             if not filename:        # check filename is empty
-                self.csocket.send(json.dumps({'status': 4, 'result': ['filename can\'t empty']}))
+                self.csocket.send(json.dumps({'status': 4, 'result': ["filename can't empty"]}).encode())
                 break
 
             if device_name in microphones:       # check microphone has or hasn't been defined
