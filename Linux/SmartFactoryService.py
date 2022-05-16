@@ -610,23 +610,14 @@ class SmartFactoryService:
                 analysis_result = self.queue.get()
                 self.queue.put(analysis_result)
                 wav_to_mp3(filename=self.filename)
-                # rm_file(path=SOURCE_PATH, filename=self.filename + '.wav')
+                rm_file(path=SOURCE_PATH, filename=self.filename + '.wav')
                 remote_backup(filename=self.filename + '.mp3', result=analysis_result.get('result')[0])
                 backup(filename=self.filename + '.mp3', result=analysis_result.get('result')[0])
             else:
-                # result = ["has not found device", "please check your device"]
-                # result = {
-                #     'status': 2,
-                #     'result': []
-                # }
                 result = dict(self.Result(status=2, model=[], result=[])._asdict())
                 self.queue.put(result)
         except Exception as exc:
             log.exception(f'SmartFactoryService all exception: {str(exc)}')
-            # result = {
-            #     'status': 2,
-            #     'result': []
-            # }
             result = dict(self.Result(status=2, model=[], result=[])._asdict())
             self.queue.put(result)
 

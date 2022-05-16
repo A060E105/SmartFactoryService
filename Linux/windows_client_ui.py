@@ -421,7 +421,7 @@ def check_remote_backup_path() -> None:
     :return: None
     """
     backup_path = CONFIG.remote_backup_path.replace('\\', '/')
-    if not os.path.exists(backup_path):
+    if not os.path.exists(backup_path) and backup_path != '':
         log.warning(f'not found remote backup path')
         messagebox.showwarning('警告', '找不到遠端備份路徑')
 
