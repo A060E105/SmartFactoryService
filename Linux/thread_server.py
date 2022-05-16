@@ -14,6 +14,8 @@ import os
 import sys
 from datetime import datetime
 
+import win32api
+
 expire = datetime(2024, 2, 1)   # 過期時間
 
 if sys.executable.endswith("pythonw.exe"):
@@ -32,6 +34,19 @@ action_list = ["all", 'rec_only', 'spec_only', 'spec_ai', 'get_cali', 'set_cali'
 microphones_status = {}
 
 log.info(f'========================================')
+
+
+def set_input_volume_max() -> None:
+    """
+    麥克風輸入音量
+    """
+    WM_APPCOMMAND = 0x319
+
+    APPCOMMAND_VOLUME_MAX = 0x1a
+    APPCOMMAND_VOLUME_MIN = 0x19
+
+    # volume max
+    win32api.SendMessage (- 1, WM_APPCOMMAND, 0x30292, APPCOMMAND_VOLUME_MAX * 0x10000)
 
 
 class Status:
@@ -159,6 +174,7 @@ def boot_init() -> None:
         queue.get()
 
 
+set_input_volume_max()      # set microphone input volume max
 boot_init()     # boot initiation
 
 LOCALHOST = ""
