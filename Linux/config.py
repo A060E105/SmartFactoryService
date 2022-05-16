@@ -11,6 +11,8 @@
 import json
 import os
 
+last_version = '2.3.3'
+
 
 class Configuration:
     _instance = None
@@ -27,6 +29,8 @@ class Configuration:
         # if the file exist then read the file, else create the file
         if os.path.isfile(self.filename):
             self.read()
+            self.version = last_version
+            self.save()
         else:
             self.create()
             self.save()
@@ -111,6 +115,22 @@ class Configuration:
         return self.data['audio']['channels']
 
     @property
+    def picture_width(self) -> int:
+        return self.data['spectrogram'].get('picture_width', 200)
+
+    @property
+    def picture_height(self) -> int:
+        return self.data['spectrogram'].get('picture_height', 100)
+
+    @property
+    def freq_split_list(self) -> list:
+        return self.data['spectrogram'].get('freq_split_list', [[0, 10000]])
+
+    @property
+    def binsize(self) -> 'int|None':
+        return self.data['spectrogram'].get('binsize', None)
+
+    @property
     def with_cut_file(self) -> bool:
         return self.data['spectrogram']['with_cut_file']
 
@@ -142,7 +162,7 @@ class Configuration:
 
     # create configuration file
     def create(self) -> None:
-        self.data['version'] = '2.0.0'
+        self.data['version'] = last_version
         self.data['model_name'] = 'model.h5'
         self.data['device_name'] = "A"
         self.data['result_ratio'] = 50
@@ -166,6 +186,10 @@ class Configuration:
         self.data['audio']['channels'] = 1
         # spectrogram settings
         self.data['spectrogram'] = {}
+        self.data['spectrogram']['picture_width'] = 200
+        self.data['spectrogram']['picture_height'] = 100
+        self.data['spectrogram']['freq_split_list'] = [[0, 10000]]
+        self.data['spectrogram']['binsize'] = 2 ** 10
         self.data['spectrogram']['with_cut_file'] = True
         self.data['spectrogram']['save_split_audio'] = False
         # server settings

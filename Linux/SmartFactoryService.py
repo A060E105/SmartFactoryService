@@ -347,11 +347,11 @@ class Audio:
 # =============================================================================
 #       Specgram class
 # =============================================================================
-class Specgram():
-    picture_width , picture_height = 200 , 100 
-    CutTimeDef  = 2 
+class Specgram:
+    picture_width, picture_height = CONFIG.picture_width, CONFIG.picture_height
+    CutTimeDef = 2
     SpaceNumDef = 1 
-    freq_split_list = [ [0,10000] ]
+    freq_split_list = CONFIG.freq_split_list
 
     def __init__(self, filename: str) -> None:
         self.filename = filename
@@ -362,32 +362,32 @@ class Specgram():
         my_mkdir(AUDIO_OUT_PATH)
         my_mkdir(SPEC_PATH)
         index = 0
-        for audio_info , image_list in self.__CutFile():
+        for audio_info, image_list in self.__CutFile():
             index += 1
             if self.save_split_audio:
                 sampwidth = audio_info[0]
                 framerate = audio_info[1]
                 temp_dataTemp = audio_info[2]
                 audio_file_name = '{}_{}.wav'.format(self.filename, index)
-                audio_save_dir = os.path.join( AUDIO_OUT_PATH, self.filename )
+                audio_save_dir = os.path.join( AUDIO_OUT_PATH, self.filename)
                 my_mkdir(audio_save_dir)
-                audio_save_path =  os.path.join( audio_save_dir , audio_file_name )
-                f = wave.open( audio_save_path, "wb")
+                audio_save_path = os.path.join(audio_save_dir, audio_file_name)
+                f = wave.open(audio_save_path, "wb")
                 f.setnchannels(1)
                 f.setsampwidth(sampwidth)
                 f.setframerate(framerate)
 
-                f.writeframes(temp_dataTemp.tobytes() )
+                f.writeframes(temp_dataTemp.tobytes())
                 f.close()
 
-            for freq_info,image in zip(self.freq_split_list , image_list):
-                img_bin = Image.fromarray( image.astype( np.uint8 ), 'RGB')
-                freq_str = '{}~{}'.format( freq_info[0], freq_info[1] )
-                image_dir = os.path.join( SPEC_PATH, freq_str, self.filename)
-                file_name = '{}_{}.png'.format( self.filename, index )
+            for freq_info, image in zip(self.freq_split_list, image_list):
+                img_bin = Image.fromarray(image.astype(np.uint8), 'RGB')
+                freq_str = '{}~{}'.format(freq_info[0], freq_info[1])
+                image_dir = os.path.join(SPEC_PATH, freq_str, self.filename)
+                file_name = '{}_{}.png'.format(self.filename, index)
                 my_mkdir(image_dir)
-                image_path = os.path.join( image_dir, file_name)
-                img_bin.save( image_path )
+                image_path = os.path.join(image_dir, file_name)
+                img_bin.save(image_path)
 
     @property
     def file_path(self) -> str:
@@ -398,7 +398,7 @@ class Specgram():
         params = f.getparams()
         
         nchannels, sampwidth, framerate, nframes = params[:4]
-        CutFrameNum = framerate* self.CutTimeDef
+        CutFrameNum = framerate * self.CutTimeDef
         str_data = f.readframes(nframes)
         f.close()
         wave_data = np.frombuffer(str_data, dtype=np.short)
@@ -407,34 +407,38 @@ class Specgram():
             wave_data.shape = -1, 2
             wave_data = wave_data.T
         else:
-            wave_data = wave_data.reshape( 1,wave_data.shape[0] )
+            wave_data = wave_data.reshape(1, wave_data.shape[0])
 
         if self.with_cut_file:
             ptr_start = 0
             time = 0
             total_time = (wave_data.shape[1] / framerate / self.SpaceNumDef) - self.CutTimeDef 
             total_time = int(total_time) + 1
-            with tqdm.tqdm(total = total_time, desc=f"{self.filename}.wav to specgram") as pbar:
+            with tqdm.tqdm(total=total_time, desc=f"{self.filename}.wav to specgram") as pbar:
                 while 1:
                     ptr_end = ptr_start + self.CutTimeDef * framerate
                     ptr_end = int(ptr_end)
                     if ptr_end <= nframes:
                         temp_dataTemp = wave_data[0][ptr_start:ptr_end]  
-                        image_list = self.__plotstft( self.freq_split_list , self.picture_width , self.picture_height , framerate , temp_dataTemp )
+                        image_list = self.__plotstft(self.freq_split_list, self.picture_width, self.picture_height,
+                                                     framerate, temp_dataTemp)
                         ptr_start += self.SpaceNumDef * framerate
                         ptr_start = int(ptr_start)
                         time += 1
                         pbar.update(1)
                         #print('\n' , ptr_start , ptr_end, '\n')
-                        yield [sampwidth , framerate , temp_dataTemp] , image_list
+                        yield [sampwidth, framerate, temp_dataTemp], image_list
                     else:
                         break
         else:
             temp_dataTemp = wave_data[0]
-            image_list = self.__plotstft( self.freq_split_list , self.picture_width , self.picture_height , framerate , temp_dataTemp ) 
-            yield [sampwidth , framerate , temp_dataTemp] , image_list
+            image_list = self.__plotstft(self.freq_split_list, self.picture_width, self.picture_height, framerate,
+                                         temp_dataTemp)
+            yield [sampwidth, framerate, temp_dataTemp], image_list
 
     def __plotstft(self, freq_split_list, im_width, im_height, samplerate, samples, binsize=2**10, plotpath=None, colormap="jet") -> np:
+        if CONFIG.binsize is not None:
+            binsize = CONFIG.binsize
         s = self.__stft(samples, binsize)
         sshow_origin, freq = self.__logscale_spec(s, factor=1.0, sr=samplerate)
         image_list = []
