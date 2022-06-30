@@ -9,6 +9,7 @@ from SmartFactoryService import Audio
 import SmartFactoryService as SFS
 from config import Configuration
 from Logger import get_logger
+import subprocess
 
 import os
 import sys
@@ -39,14 +40,14 @@ log.info(f'========================================')
 def set_input_volume_max() -> None:
     """
     麥克風輸入音量
+    100%為65536，50%為32768
     """
-    WM_APPCOMMAND = 0x319
-
-    APPCOMMAND_VOLUME_MAX = 0x1a
-    APPCOMMAND_VOLUME_MIN = 0x19
-
-    # volume max
-    win32api.SendMessage (- 1, WM_APPCOMMAND, 0x30292, APPCOMMAND_VOLUME_MAX * 0x10000)
+    volume = 65536 * (50 / 100)
+    try:
+        cmd = f"nircmdc.exe loop 144000 250 setsysvolume {volume} default_record"
+        subprocess.run(cmd, timeout=1)
+    except Exception:
+        pass
 
 
 class Status:
