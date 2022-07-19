@@ -11,7 +11,7 @@
 import json
 import os
 
-last_version = '2.3.6'
+last_version = '2.3.7'
 
 
 class Configuration:
@@ -131,6 +131,10 @@ class Configuration:
         return self.data['spectrogram'].get('binsize', None)
 
     @property
+    def hopsize(self) -> int:
+        return self.data['spectrogram'].get('hopsize', None)
+
+    @property
     def with_cut_file(self) -> bool:
         return self.data['spectrogram']['with_cut_file']
 
@@ -190,6 +194,7 @@ class Configuration:
         self.data['spectrogram']['picture_height'] = 100
         self.data['spectrogram']['freq_split_list'] = [[0, 10000]]
         self.data['spectrogram']['binsize'] = 2 ** 10
+        self.data['spectrogram']['hopsize'] = (2 ** 10) * 0.5
         self.data['spectrogram']['with_cut_file'] = True
         self.data['spectrogram']['save_split_audio'] = False
         # server settings

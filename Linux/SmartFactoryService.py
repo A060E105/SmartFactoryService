@@ -501,7 +501,10 @@ class Specgram:
 
     def __stft(self, sig, frameSize, overlapFac=0.5, window=np.hanning) -> np:
         win = window(frameSize)
-        hopSize = int(frameSize - np.floor(overlapFac * frameSize))
+        if CONFIG.hopsize is not None:
+            hopSize = CONFIG.hopsize
+        else:
+            hopSize = int(frameSize - np.floor(overlapFac * frameSize))
         # zeros at beginning (thus center of 1st window should be for sample nr. 0)   
         samples = np.append(np.zeros(int(np.floor(frameSize/2.0))), sig)    
         # cols for windowing
