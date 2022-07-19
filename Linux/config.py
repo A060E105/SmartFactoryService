@@ -11,12 +11,12 @@
 import json
 import os
 
-last_version = '2.4.0'
+last_version = '2.4.1'
 
 
 class Configuration:
     _instance = None
-    filename = './SmartFactory.conf'
+    filename = 'SmartFactory.conf'
 
     # single instance
     def __new__(cls, *args, **kwargs):
@@ -147,6 +147,14 @@ class Configuration:
         return self.data['spectrogram']['save_split_audio']
 
     @property
+    def vmin(self) -> int:
+        return self.data['spectrogram'].get('vmin', -90)
+
+    @property
+    def vmax(self) -> int:
+        return self.data['spectrogram'].get('vmax', 30)
+
+    @property
     def port(self) -> int:
         return self.data['server']['port']
 
@@ -199,9 +207,11 @@ class Configuration:
         self.data['spectrogram']['picture_height'] = 100
         self.data['spectrogram']['freq_split_list'] = [[0, 10000]]
         self.data['spectrogram']['binsize'] = 2 ** 10
-        self.data['spectrogram']['hopsize'] = (2 ** 10) * 0.5
+        self.data['spectrogram']['hopsize'] = int((2 ** 10) * 0.5)
         self.data['spectrogram']['with_cut_file'] = True
         self.data['spectrogram']['save_split_audio'] = False
+        self.data['spectrogram']['vmin'] = -90
+        self.data['spectrogram']['vmax'] = 30
         # server settings
         self.data['server'] = {}
         self.data['server']['port'] = 7000

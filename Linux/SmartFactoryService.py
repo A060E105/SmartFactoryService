@@ -464,7 +464,8 @@ class Specgram:
             #print("timebins: ", timebins)
             #print("freqbins: ", freqbins)
             # plt.imshow(np.transpose(ims), origin="None", aspect="auto", cmap="jet", extent = None, interpolation='None', vmin= -160, vmax= 0)
-            plt.imshow(np.transpose(ims), origin="lower", aspect="auto", cmap="jet", extent = None, interpolation='None', vmin= -160, vmax= 0)
+            plt.imshow(np.transpose(ims), origin="lower", aspect="auto", cmap="jet", extent=None,
+                       interpolation='None', vmin=CONFIG.vmin, vmax=CONFIG.vmax)
             plt.axis('off') 
             fig = plt.gcf()
             fig.set_size_inches(  im_width , im_height  ) #dpi = 300, output = 700*700 pixels
@@ -567,7 +568,8 @@ class AI_analysis():
         return []
 
     def getResult(self) -> list:
-        file_path = os.path.join('spec', '0~10000', self.filename)
+        target_dir = '~'.join(list(map(lambda x: str(x), CONFIG.freq_split_list[0])))
+        file_path = os.path.join('spec', target_dir, self.filename)
         f_names = glob.glob(file_path + '/*.png')
 
         for i in range(len(f_names)):
@@ -780,7 +782,8 @@ class SmartFactoryService:
         boot_init_filename = 'boot_init'
         source_file = SOURCE_PATH + boot_init_filename + '.wav'
         audio_path = os.path.join(AUDIO_OUT_PATH, boot_init_filename)
-        spec_path = os.path.join(SPEC_PATH, '0~10000', boot_init_filename)
+        target_dir = '~'.join(list(map(lambda x: str(x), CONFIG.freq_split_list[0])))
+        spec_path = os.path.join(SPEC_PATH, target_dir, boot_init_filename)
 
         if os.path.exists(source_file):
             os.remove(source_file)
