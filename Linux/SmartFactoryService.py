@@ -26,7 +26,9 @@ from numpy.lib import stride_tricks
 from matplotlib import pyplot as plt
 # AI analysis
 import glob
+import pickle
 import tensorflow as tf
+from sklearn.neighbors import KernelDensity
 from tensorflow.keras.preprocessing import image
 from tensorflow.keras.models import load_model
 # thread
@@ -67,6 +69,9 @@ if gpus:
         log.exception(e)
 
 MODEL = load_model('./' + CONFIG.model_name)
+ENCODER_MODEL = load_model('./' + CONFIG.encoder_model_name)
+# MODEL = load_model('./new_model.h5')
+# ENCODER_MODEL = load_model('./encoder_model.h5')
 
 
 # =======================================================
@@ -538,12 +543,16 @@ class AI_analysis():
     def __init__(self, filename) -> None:
         self.filename = filename
         self.model = MODEL
+        self.encoder_model = ENCODER_MODEL
         self.analysis = []
+
+        with open('encoded_images_vector', 'rb') as fp:
+            encoded_images_vector = pickle.load(fp)
+            self.kde = KernelDensity(kernel='gaussian', bandwidth=0.2).fit(encoded_images_vector)
 
     def __getResult(self) -> list:
         file_path = os.path.join('spec', '0~10000', 'demo')
         f_names = glob.glob(file_path + '/*.png')
-
 
         img = []
         for i in range(len(f_names)):
@@ -561,13 +570,47 @@ class AI_analysis():
         file_path = os.path.join('spec', '0~10000', self.filename)
         f_names = glob.glob(file_path + '/*.png')
 
+        for i in range(len(f_names)):
+            self.analysis.append(self.check_anomaly(f_names[i]))
+        return self.analysis
+
+    def check_anomaly(self, img_path) -> str:
+        encoder_output_shape = self.encoder_model.output_shape  # Here, we have 16x16x16
+        out_vector_shape = encoder_output_shape[1] * encoder_output_shape[2] * encoder_output_shape[3]
+        density_threshold = 8000  # Set this value based on the above exercise
+        reconstruction_error_threshold = 0.047  # Set this value based on the above exercise
+        img = Image.open(img_path)
+        img = np.array(img.resize((256, 256), Image.ANTIALIAS))
+        # plt.imshow(img)
+        img = img / 255.
+        img = img[np.newaxis, :, :, :]
+        # out_vector_shape=12544
+        encoded_img = self.encoder_model.predict([[img]])
+        encoded_img = [np.reshape(img, out_vector_shape) for img in encoded_img]
+        density = self.kde.score_samples(encoded_img)[0]
+
+        reconstruction = self.model.predict([[img]])
+        reconstruction_error = self.model.evaluate([reconstruction], [[img]], batch_size=1)[0]
+        # reconstruction_accuracy = self.model.evaluate([reconstruction], [[img]], batch_size=1)[1]
+
+        if density < density_threshold or reconstruction_error > reconstruction_error_threshold:
+            # print(img_path + "/NG")
+            result = "NG"
+        else:
+            # print(img_path + "/OK")
+            result = "OK"
+        return result
+
+    def _old_backup_getResult(self) -> list:
+        file_path = os.path.join('spec', '0~10000', self.filename)
+        f_names = glob.glob(file_path + '/*.png')
+
         img = []
         for i in range(len(f_names)):
             images = image.load_img(f_names[i], target_size=(100, 200))
             x = image.img_to_array(images)
             x = np.expand_dims(x, axis=0)
             img.append(x)
-
 
         x = np.concatenate([x for x in img])
 

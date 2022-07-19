@@ -11,7 +11,7 @@
 import json
 import os
 
-last_version = '2.3.7'
+last_version = '2.4.0'
 
 
 class Configuration:
@@ -46,6 +46,10 @@ class Configuration:
     @property
     def model_name(self) -> str:
         return self.data['model_name']
+
+    @property
+    def encoder_model_name(self) -> str:
+        return self.data['encoder_model_name']
 
     @property
     def device_name(self) -> str:
@@ -168,6 +172,7 @@ class Configuration:
     def create(self) -> None:
         self.data['version'] = last_version
         self.data['model_name'] = 'model.h5'
+        self.data['encoder_model_name'] = 'encoder_model.h5'
         self.data['device_name'] = "A"
         self.data['result_ratio'] = 50
         # device settings
