@@ -11,7 +11,7 @@
 import json
 import os
 
-last_version = '2.4.1'
+last_version = '2.4.2'
 
 
 class Configuration:
@@ -155,6 +155,14 @@ class Configuration:
         return self.data['spectrogram'].get('vmax', 30)
 
     @property
+    def density(self) -> int:
+        return self.data['AI_analysis'].get('density', 8000)
+
+    @property
+    def thresholds(self) -> float:
+        return self.data['AI_analysis'].get('thresholds', 0.047)
+
+    @property
     def port(self) -> int:
         return self.data['server']['port']
 
@@ -212,6 +220,10 @@ class Configuration:
         self.data['spectrogram']['save_split_audio'] = False
         self.data['spectrogram']['vmin'] = -90
         self.data['spectrogram']['vmax'] = 30
+        # AI_analysis
+        self.data['AI_analysis'] = {}
+        self.data['AI_analysis']['density'] = 8000
+        self.data['AI_analysis']['thresholds'] = 0.047
         # server settings
         self.data['server'] = {}
         self.data['server']['port'] = 7000

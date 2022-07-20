@@ -579,8 +579,10 @@ class AI_analysis():
     def check_anomaly(self, img_path) -> str:
         encoder_output_shape = self.encoder_model.output_shape  # Here, we have 16x16x16
         out_vector_shape = encoder_output_shape[1] * encoder_output_shape[2] * encoder_output_shape[3]
-        density_threshold = 8000  # Set this value based on the above exercise
-        reconstruction_error_threshold = 0.047  # Set this value based on the above exercise
+        # Set this value based on the above exercise
+        density_threshold = CONFIG.density
+        # Set this value based on the above exercise
+        reconstruction_error_threshold = CONFIG.thresholds
         img = Image.open(img_path)
         img = np.array(img.resize((256, 256), Image.ANTIALIAS))
         # plt.imshow(img)
@@ -596,10 +598,8 @@ class AI_analysis():
         # reconstruction_accuracy = self.model.evaluate([reconstruction], [[img]], batch_size=1)[1]
 
         if density < density_threshold or reconstruction_error > reconstruction_error_threshold:
-            # print(img_path + "/NG")
             result = "NG"
         else:
-            # print(img_path + "/OK")
             result = "OK"
         return result
 
