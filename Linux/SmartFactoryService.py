@@ -596,6 +596,8 @@ class AI_analysis():
         reconstruction = self.model.predict([[img]])
         reconstruction_error = self.model.evaluate([reconstruction], [[img]], batch_size=1)[0]
         # reconstruction_accuracy = self.model.evaluate([reconstruction], [[img]], batch_size=1)[1]
+        print(f"density: {density}")
+        print(f"thresholds: {reconstruction_error}")
 
         if density < density_threshold or reconstruction_error > reconstruction_error_threshold:
             result = "NG"
