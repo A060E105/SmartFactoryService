@@ -18,6 +18,50 @@ $ pyarmor obfuscate --restrict 1 --exact --no-runtime <filename>
 
 # Version
 
+## 2.5.0
+新增功能：
+* 錄音完成後先將 wav 轉成 mp3 ，再將 mp3 轉回 wav ，並覆蓋之前的 wav 檔。
+
+## 2.4.3
+新增功能：
+* 顯示每張圖片的 density 和 thresholds 。
+
+## 2.4.2
+新增功能：
+* 可於設定檔中設定 AI 分析的 density 和 thresholds 的數值。
+
+## 2.4.1
+新增功能：
+* 可於設定檔中設定 Spectrogram 中的 vmin 和 vmax 數值。
+
+修復問題：
+* AI 分析中，抓不到正確圖片路徑的問題。
+
+## 2.4.0
+新增功能：
+* 使用新的模型架構(KDE model)。
+
+## 2.3.7
+新增功能：
+* 將麥克風預設輸入音量調整至 80% 。
+* 可於設定檔中設定 Spectrogram 中的 hopsize 數值。
+
+## 2.3.6
+新增功能：
+* 使用 `nircmdc.exe` 來設定麥克風輸入音量。
+
+## 2.3.5
+新增功能：
+* 設定麥克風輸入音量。
+
+## 2.3.3
+新增功能：
+* 可於設定檔中設定 picture_width, picture_height, freq_split_list 和 binsize 的數值。
+
+## 2.3.2
+修復問題：
+* 錯誤訊息的編碼
+
 ## 2.3.1
 新增功能：
 * 取得麥克風校正值會同時拿到舊的校正值與新的校正值
