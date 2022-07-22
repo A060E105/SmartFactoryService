@@ -11,7 +11,7 @@
 import json
 import os
 
-last_version = '2.5.0'
+last_version = '2.5.1'
 
 
 class Configuration:

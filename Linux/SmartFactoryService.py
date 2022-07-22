@@ -606,9 +606,9 @@ class AI_analysis():
         print(f"thresholds: {reconstruction_error}")
 
         if density < density_threshold or reconstruction_error > reconstruction_error_threshold:
-            result = "NG"
+            result = "NG" + f",{density},{reconstruction_error}"
         else:
-            result = "OK"
+            result = "OK" + f",{density},{reconstruction_error}"
         return result
 
     def _old_backup_getResult(self) -> list:
@@ -741,8 +741,14 @@ class SmartFactoryService:
             #     'result': AI_analysis(filename).getResult()
             # }
             response = AI_analysis(filename).getResult()
+            ok_ng = [x.split(',')[0] for x in response]
+            density = [x.split(',')[1] for x in response]
+            thresholds = [x.split(',')[2] for x in response]
+            response = ok_ng
             response = parser_result(response)
             result = dict(self.Result(status=0, model=[CONFIG.model_name], result=[response])._asdict())
+            result['density'] = density
+            result['thresholds'] = thresholds
             queue.put(result)
         finally:
             gpu_lock.release()
