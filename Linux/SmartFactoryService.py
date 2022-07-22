@@ -106,6 +106,12 @@ def wav_to_mp3(action=None, filename=None) -> None:
         sound.export(SOURCE_PATH + filename + '.mp3', format='mp3')
 
 
+def mp3_to_wav(filename=None) -> None:
+    file_path = SOURCE_PATH + f"{filename}.mp3"
+    sound = AudioSegment.from_mp3(file_path)
+    sound.export(SOURCE_PATH + filename + '.wav', format='wav')
+
+
 def rm_file(path='', filename=None) -> None:
     file = path + filename
     if os.path.exists(file):
@@ -654,12 +660,13 @@ class SmartFactoryService:
                 self.au.record()
                 self.au.A_weighting()
                 self.au.save_wav()
+                wav_to_mp3(filename=self.filename)
+                mp3_to_wav(filename=self.filename)
                 my_thread = Thread(self.comb_spec_AI(self.filename, gpu_lock=self.gpu_lock, queue=self.queue))
                 my_thread.start()
                 my_thread.join()
                 analysis_result = self.queue.get()
                 self.queue.put(analysis_result)
-                wav_to_mp3(filename=self.filename)
                 rm_file(path=SOURCE_PATH, filename=self.filename + '.wav')
                 remote_backup(filename=self.filename + '.mp3', result=analysis_result.get('result')[0])
                 backup(filename=self.filename + '.mp3', result=analysis_result.get('result')[0])
