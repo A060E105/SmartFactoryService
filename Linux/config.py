@@ -11,7 +11,7 @@
 import json
 import os
 
-last_version = '2.5.1'
+last_version = '2.6.0'
 
 
 class Configuration:
@@ -155,12 +155,12 @@ class Configuration:
         return self.data['spectrogram'].get('vmax', 30)
 
     @property
-    def density(self) -> int:
-        return self.data['AI_analysis'].get('density', 8000)
+    def KDE_score(self) -> int:
+        return self.data['AI_analysis'].get('KDE_score', 8000)
 
     @property
-    def thresholds(self) -> float:
-        return self.data['AI_analysis'].get('thresholds', 0.047)
+    def MSE_score(self) -> float:
+        return self.data['AI_analysis'].get('MSE_score', 0.047)
 
     @property
     def port(self) -> int:
@@ -222,8 +222,8 @@ class Configuration:
         self.data['spectrogram']['vmax'] = 30
         # AI_analysis
         self.data['AI_analysis'] = {}
-        self.data['AI_analysis']['density'] = 8000
-        self.data['AI_analysis']['thresholds'] = 0.047
+        self.data['AI_analysis']['KDE_score'] = 8000
+        self.data['AI_analysis']['MSE_score'] = 0.047
         # server settings
         self.data['server'] = {}
         self.data['server']['port'] = 7000

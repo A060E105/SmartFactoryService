@@ -12,6 +12,7 @@ import time
 import tqdm
 import wave
 import numpy as np
+import pandas as pd
 from pyaudio import PyAudio, paInt16
 import soundfile
 from pydub import AudioSegment      # wav to mp3
@@ -551,7 +552,6 @@ class AI_analysis():
         self.filename = filename
         self.model = MODEL
         self.encoder_model = ENCODER_MODEL
-        self.analysis = []
 
         with open('encoded_images_vector', 'rb') as fp:
             encoded_images_vector = pickle.load(fp)
@@ -573,22 +573,30 @@ class AI_analysis():
 
         return []
 
-    def getResult(self) -> list:
+    def getResult(self) -> tuple:
         target_dir = '~'.join(list(map(lambda x: str(x), CONFIG.freq_split_list[0])))
         file_path = os.path.join('spec', target_dir, self.filename)
         f_names = glob.glob(file_path + '/*.png')
+        analysis_list = []
 
         for i in range(len(f_names)):
-            self.analysis.append(self.check_anomaly(f_names[i]))
-        return self.analysis
+            analysis_list.append(self.get_analysis_result(f_names[i]))
 
-    def check_anomaly(self, img_path) -> str:
+        df = pd.DataFrame(analysis_list, columns=['density', 'thresholds'])
+        density = round(df['density'].mean(), 6)
+        thresholds = round(df['thresholds'].mean(), 6)
+
+        if density < CONFIG.KDE_score or thresholds > CONFIG.MSE_score:
+            analysis_result = 'NG'
+        else:
+            analysis_result = 'OK'
+
+        return analysis_result, density, thresholds
+
+    def get_analysis_result(self, img_path) -> tuple:
         encoder_output_shape = self.encoder_model.output_shape  # Here, we have 16x16x16
         out_vector_shape = encoder_output_shape[1] * encoder_output_shape[2] * encoder_output_shape[3]
-        # Set this value based on the above exercise
-        density_threshold = CONFIG.density
-        # Set this value based on the above exercise
-        reconstruction_error_threshold = CONFIG.thresholds
+
         img = Image.open(img_path)
         img = np.array(img.resize((256, 256), Image.ANTIALIAS))
         # plt.imshow(img)
@@ -602,14 +610,8 @@ class AI_analysis():
         reconstruction = self.model.predict([[img]])
         reconstruction_error = self.model.evaluate([reconstruction], [[img]], batch_size=1)[0]
         # reconstruction_accuracy = self.model.evaluate([reconstruction], [[img]], batch_size=1)[1]
-        print(f"density: {density}")
-        print(f"thresholds: {reconstruction_error}")
 
-        if density < density_threshold or reconstruction_error > reconstruction_error_threshold:
-            result = "NG" + f",{density},{reconstruction_error}"
-        else:
-            result = "OK" + f",{density},{reconstruction_error}"
-        return result
+        return density, reconstruction_error
 
     def _old_backup_getResult(self) -> list:
         file_path = os.path.join('spec', '0~10000', self.filename)
@@ -735,20 +737,12 @@ class SmartFactoryService:
         gpu_lock.acquire()
         try:
             Specgram(filename).toSpecgram()
-            # result = AI_analysis(filename).getResult()
-            # result = {
-            #     'status': 0,
-            #     'result': AI_analysis(filename).getResult()
-            # }
-            response = AI_analysis(filename).getResult()
-            ok_ng = [x.split(',')[0] for x in response]
-            density = [x.split(',')[1] for x in response]
-            thresholds = [x.split(',')[2] for x in response]
-            response = ok_ng
-            response = parser_result(response)
+
+            response, density, thresholds = AI_analysis(filename).getResult()
             result = dict(self.Result(status=0, model=[CONFIG.model_name], result=[response])._asdict())
-            result['density'] = density
-            result['thresholds'] = thresholds
+            result['KDE_score'] = [density]
+            result['MSE_score'] = [thresholds]
+            print(f"{result}")
             queue.put(result)
         finally:
             gpu_lock.release()

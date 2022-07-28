@@ -378,17 +378,9 @@ def start_analysis(event):
         if response.get('status'):
             raise BaseException
 
-        ok_count = 0
-        for item in response.get('result'):
-            # 計算 OK 的數量
-            if item == 'OK':
-                ok_count += 1
-
-        # OK 的數量必須大於一半
-        if ok_count > len(response.get('result'))/2:
-            result = 'OK'
-        else:
-            result = 'NG'
+        result = response.get('result')[0]
+        KDE_score = response.get('KDE_score')[0]
+        MSE_score = response.get('MSE_score')[0]
 
         show_result(result)
         timestr = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
@@ -396,7 +388,7 @@ def start_analysis(event):
         STORAGE.write(time=timestr,
                       filename=current_file_name, code=UI['qr_code'],
                       device=CONFIG.device_name, model=CONFIG.model_name,
-                      result=result)
+                      result=result, KDE_score=KDE_score, MSE_score=MSE_score)
 
         # remote
         # if SAVE_SWITCH.get() == 'remote':

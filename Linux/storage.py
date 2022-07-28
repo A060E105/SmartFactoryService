@@ -16,12 +16,12 @@ class Storage(object):
         self.create()
 
     # create new csv, first line data with
-    # Test time, QR Code, 'Device name', 'Model Name', 'Result']
+    # Test time, QR Code, 'Device name', 'Model Name', 'Result', 'density', 'thresholds'
     def create(self) -> None:
         self.__mkdir()
         self.__filename = self.__get_datetime()
         self.set_cached()
-        title = ['Test Time', 'QR Code', 'File Name', 'Device Name', 'Model Name', 'Result']
+        title = ['Test Time', 'QR Code', 'File Name', 'Device Name', 'Model Name', 'Result', 'KDE_score', 'MSE_score']
         with open(self.full_filename, 'w', newline='') as file:
             csv_write = csv.writer(file)
             csv_write.writerow(title)
@@ -35,7 +35,8 @@ class Storage(object):
         with open(self.full_filename, 'a', newline='') as file:
             csv_write = csv.writer(file)
             csv_write.writerow([data.get('time'), data.get('code'), data.get('filename'),
-                                data.get('device'), data.get('model'), data.get('result')])
+                                data.get('device'), data.get('model'), data.get('result'),
+                               data.get('KDE_score'), data.get('MSE_score')])
 
     @property
     def full_filename(self) -> str:
