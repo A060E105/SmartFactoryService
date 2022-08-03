@@ -108,9 +108,12 @@ def wav_to_mp3(action=None, filename=None) -> None:
 
 
 def mp3_to_wav(filename=None) -> None:
-    file_path = SOURCE_PATH + f"{filename}.mp3"
-    sound = AudioSegment.from_mp3(file_path)
-    sound.export(SOURCE_PATH + filename + '.wav', format='wav')
+    source_path = f"{SOURCE_PATH}{filename}.mp3"
+    target_path = f"{SOURCE_PATH}{filename}.wav"
+    cmd = f"ffmpeg -i {source_path} -vn -acodec pcm_s16le -f s16le -ac 1 -ar 96000 -f wav {target_path} -y"
+    os.system(cmd)
+    y, sr = soundfile.read(target_path)
+    soundfile.write(target_path, y, sr, 'PCM_16')
 
 
 def rm_file(path='', filename=None) -> None:
