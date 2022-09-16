@@ -11,7 +11,7 @@
 import json
 import os
 
-last_version = '2.6.1'
+last_version = '2.7.0'
 
 
 class Configuration:
@@ -167,6 +167,22 @@ class Configuration:
         return self.data['server']['port']
 
     @property
+    def ftp_server(self) -> str:
+        return self.data['FTP'].get('server')
+
+    @property
+    def ftp_port(self) -> int:
+        return self.data['FTP'].get('port')
+
+    @property
+    def ftp_username(self) -> str:
+        return self.data['FTP'].get('username')
+
+    @property
+    def ftp_passwd(self) -> str:
+        return self.data['FTP'].get('passwd')
+
+    @property
     def status_message(self) -> dict:
         return self.data['status_message']
 
@@ -227,6 +243,12 @@ class Configuration:
         # server settings
         self.data['server'] = {}
         self.data['server']['port'] = 7000
+        # FTP settings
+        self.data['FTP'] = {}
+        self.data['FTP']['server'] = '127.0.0.1'
+        self.data['FTP']['username'] = 'username'
+        self.data['FTP']['passwd'] = 'passwd'
+        self.data['FTP']['port'] = 21
         # status message
         self.data['status_message'] = {}
         self.data['status_message']['wait_for_press'] = '等待按下測試按鈕'

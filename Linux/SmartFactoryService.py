@@ -7,6 +7,7 @@ import platform
 import re
 import os
 import shutil
+from ftplib import FTP
 # from tensorflow.python.framework.ops import device
 import time
 import tqdm
@@ -151,25 +152,45 @@ def remote_backup(filename=None, result='') -> None:
     :param result:
     :return:
     """
-    target = CONFIG.remote_backup_path
-    target = target.replace('\\', '/')
-    if target != '':    # 路徑不為空才執行遠端備份
-        file = SOURCE_PATH + filename
+    ftp_server = CONFIG.ftp_server
+    ftp_username = CONFIG.ftp_username
+    ftp_passwd = CONFIG.ftp_passwd
+    ftp_port = CONFIG.ftp_port
 
+    ftp = FTP()
+    ftp.connect(host=ftp_server, port=ftp_port)
+
+    target = CONFIG.remote_backup_path
+    file = SOURCE_PATH + filename
+    try:
+        ftp.login(ftp_username, ftp_passwd)
+        ftp.cwd(target)
+        ftp.mkd(STORAGE.filename)
+        ftp.cwd(STORAGE.filename)
         # create NG/OK folder
         for folder in AI_analysis.my_class:
-            path = os.path.join(target, STORAGE.filename, folder)
-            my_mkdir(path)
+            ftp.mkd(folder)
+        ftp.cwd(result)
+        ftp.storbinary(f"STOR {filename}", open(file, 'rb'), 1024)
+        ftp.quit()
+    except Exception as e:
+        log.exception('Remote Backup exception', exc_info=False)
+        print(e)
 
-        try:
-            target_path = os.path.join(target, STORAGE.filename, result, filename)
-            shutil.copyfile(file, target_path)
-        except PermissionError:
-            log.warning('Remote Backup exception is Permission error')
-            pass
-        except:
-            log.exception('Remote Backup exception', exc_info=False)
-            pass
+        # create NG/OK folder
+        # for folder in AI_analysis.my_class:
+        #     path = os.path.join(target, STORAGE.filename, folder)
+        #     my_mkdir(path)
+
+        # try:
+        #     target_path = os.path.join(target, STORAGE.filename, result, filename)
+        #     shutil.copyfile(file, target_path)
+        # except PermissionError:
+        #     log.warning('Remote Backup exception is Permission error')
+        #     pass
+        # except:
+        #     log.exception('Remote Backup exception', exc_info=False)
+        #     pass
 
 
 def parser_result(results: list) -> str:
@@ -478,6 +499,7 @@ class Specgram:
                        interpolation='None', vmin=CONFIG.vmin, vmax=CONFIG.vmax)
             plt.axis('off') 
             fig = plt.gcf()
+            plt.yscale('symlog', linthreshv=200)
             fig.set_size_inches(  im_width , im_height  ) #dpi = 300, output = 700*700 pixels
             plt.gca().xaxis.set_major_locator(plt.NullLocator())
             plt.gca().yaxis.set_major_locator(plt.NullLocator())
