@@ -11,7 +11,7 @@
 import json
 import os
 
-last_version = '2.7.0'
+last_version = '2.7.1'
 
 
 class Configuration:
@@ -93,6 +93,10 @@ class Configuration:
     @property
     def backup_path(self) -> str:
         return self.data.get('backup_path', './backup')
+
+    @property
+    def is_ftp_backup(self) -> bool:
+        return str(self.data.get('remote_system', '')).upper() == 'FTP'
 
     @property
     def remote_backup_path(self) -> str:
@@ -183,6 +187,10 @@ class Configuration:
         return self.data['FTP'].get('passwd')
 
     @property
+    def ftp_path(self) -> str:
+        return self.data['FTP'].get('path')
+
+    @property
     def status_message(self) -> dict:
         return self.data['status_message']
 
@@ -216,6 +224,7 @@ class Configuration:
         self.data['delay_time'] = 2
         # backup audio path
         self.data['backup_path'] = './backup'
+        self.data['remote_system'] = ''
         # remote backup audio path
         self.data['remote_backup_path'] = ''
         # audio settings
@@ -249,6 +258,7 @@ class Configuration:
         self.data['FTP']['username'] = 'username'
         self.data['FTP']['passwd'] = 'passwd'
         self.data['FTP']['port'] = 21
+        self.data['FTP']['path'] = 'backup_path'
         # status message
         self.data['status_message'] = {}
         self.data['status_message']['wait_for_press'] = '等待按下測試按鈕'

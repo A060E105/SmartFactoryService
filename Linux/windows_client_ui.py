@@ -412,11 +412,11 @@ def check_remote_backup_path() -> None:
 
     :return: None
     """
-    pass
-    # backup_path = CONFIG.remote_backup_path.replace('\\', '/')
-    # if not os.path.exists(backup_path) and backup_path != '':
-    #     log.warning(f'not found remote backup path')
-    #     messagebox.showwarning('警告', '找不到遠端備份路徑')
+    if not CONFIG.is_ftp_backup:
+        backup_path = CONFIG.remote_backup_path.replace('\\', '/')
+        if not os.path.exists(backup_path) and backup_path != '':
+            log.warning(f'not found remote backup path')
+            messagebox.showwarning('警告', '找不到遠端備份路徑')
 
 
 def check_server_start(reconnected: bool = False) -> None:
