@@ -158,11 +158,17 @@ def ftp_upload(filename=None, result=''):
     try:
         ftp.login(ftp_username, ftp_passwd)
         ftp.cwd(ftp_path)
-        ftp.mkd(STORAGE.filename)
+
+        if STORAGE.filename not in ftp.nlst():
+            ftp.mkd(STORAGE.filename)
+
         ftp.cwd(STORAGE.filename)
+
         # create NG/OK folder
         for folder in AI_analysis.my_class:
-            ftp.mkd(folder)
+            if folder not in ftp.nlst():
+                ftp.mkd(folder)
+
         ftp.cwd(result)
         ftp.storbinary(f"STOR {filename}", open(file, 'rb'), 1024)
         ftp.quit()
