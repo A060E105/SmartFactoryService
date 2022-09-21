@@ -14,6 +14,7 @@ import tqdm
 import wave
 import numpy as np
 import pandas as pd
+import datetime
 from pyaudio import PyAudio, paInt16
 import soundfile
 from pydub import AudioSegment      # wav to mp3
@@ -159,17 +160,18 @@ def ftp_upload(filename=None, result=''):
         ftp.login(ftp_username, ftp_passwd)
         ftp.cwd(ftp_path)
 
-        if STORAGE.filename not in ftp.nlst():
-            ftp.mkd(STORAGE.filename)
+        folder_name = datetime.datetime.now().strftime("%Y%m%d")
+        if folder_name not in ftp.nlst():
+            ftp.mkd(folder_name)
 
-        ftp.cwd(STORAGE.filename)
+        ftp.cwd(folder_name)
 
         # create NG/OK folder
-        for folder in AI_analysis.my_class:
-            if folder not in ftp.nlst():
-                ftp.mkd(folder)
-
-        ftp.cwd(result)
+        # for folder in AI_analysis.my_class:
+        #     if folder not in ftp.nlst():
+        #         ftp.mkd(folder)
+        #
+        # ftp.cwd(result)
         ftp.storbinary(f"STOR {filename}", open(file, 'rb'), 1024)
         ftp.quit()
     except Exception as e:
