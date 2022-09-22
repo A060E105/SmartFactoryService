@@ -516,7 +516,7 @@ class Specgram:
                        interpolation='None', vmin=CONFIG.vmin, vmax=CONFIG.vmax)
             plt.axis('off') 
             fig = plt.gcf()
-            plt.yscale('symlog', linthreshv=200)
+            plt.yscale('symlog', linthreshy=200)
             fig.set_size_inches(  im_width , im_height  ) #dpi = 300, output = 700*700 pixels
             plt.gca().xaxis.set_major_locator(plt.NullLocator())
             plt.gca().yaxis.set_major_locator(plt.NullLocator())
