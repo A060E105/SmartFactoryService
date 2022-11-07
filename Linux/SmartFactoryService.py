@@ -381,7 +381,7 @@ class Audio:
         # print(f'self device name: {self.device}')
         for i in range(0, numdevices):
             if (p.get_device_info_by_host_api_device_index(0, i).get('maxInputChannels')) > 0:
-                if ((re.search(device_name, p.get_device_info_by_host_api_device_index(0, i).get('name'))) is not None):
+                if re.search(device_name, p.get_device_info_by_host_api_device_index(0, i).get('name')) is not None:
                     return i
 
     def hasDevice(self) -> bool:
@@ -687,11 +687,11 @@ class AI_analysis():
 class SmartFactoryService:
     Result = namedtuple('Result', ['status', 'model', 'result'])
 
-    def __init__(self, filename='', device='', queue=None, gpu_lock=None, config=None) -> None:
+    def __init__(self, filename='', device='Cotron EZM-001', queue=None, gpu_lock=None, config=None) -> None:
         self.filename = filename
         self.queue = queue
         self.gpu_lock = gpu_lock
-        self.device = 'Cotron EZM-001'
+        self.device = device
         self.config_name = config
         self.au = Audio(self.filename, device=self.device, config=config)
 
