@@ -41,8 +41,9 @@ def set_input_volume_max() -> None:
     """
     麥克風輸入音量
     100%為65536，50%為32768
+    20230215 change to 100%, the previous is 80%
     """
-    volume = 65536 * (80 / 100)
+    volume = 65536 * (100 / 100)
     try:
         cmd = f"nircmdc.exe loop 144000 250 setsysvolume {volume} default_record"
         subprocess.run(cmd, timeout=1)
