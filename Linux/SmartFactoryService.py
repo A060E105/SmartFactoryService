@@ -353,7 +353,7 @@ class Audio:
         source_data, fs = soundfile.read(cali_path)
         b, a = self.__A_weighting(fs)
         AW_data = lfilter(b, a, source_data)
-        cali = 0.2 / (np.sqrt(np.mean(np.absolute(AW_data)**2)))
+        cali = 0.1 / (np.sqrt(np.mean(np.absolute(AW_data)**2)))
         # 202302116 , 0.2 -> 0.1  for 80dB ->74dB
         log.debug(f'cali: {cali}')
         db = 20*np.log10(np.sqrt(np.mean(np.absolute(AW_data)**2))/(ref*cali))
