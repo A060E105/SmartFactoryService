@@ -11,16 +11,20 @@ from ui_mainwindow import Ui_MainWindow
 
 class TEDClientAgent(QObject):
 
-    statusChanged = Signal(str)
+    statusChanged = Signal(str, str)
 
     def __init__(self):
         super().__init__()
 
-
-
     def doCreateCSV(self):
         print("agent create csv")
-        self.statusChanged.emit("Creating CSV....")
+        self.statusChanged.emit("server_status", 'Hello World!!!')
+        self.statusChanged.emit("dB", '30.5')
+        self.statusChanged.emit("KDE", '40.5')
+        self.statusChanged.emit("MSE", '50.5')
+
+    def run(self):
+        print('press run.')
 
 
 class MainWindow(QMainWindow):
@@ -32,16 +36,26 @@ class MainWindow(QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.ui.lbl_server_status.setText("待機中！")
-        self.ui.actioncreate_csv.triggered.connect(self.createCSV)
+        self.ui.actioncreate_csv.triggered.connect(self.agent.doCreateCSV)
+        # self.ui.actioncreate_csv.triggered.connect(self.createCSV)
         agent.statusChanged.connect(self.onStatusChanged)
+
+    def test(self):
+        self.agent.run()
 
     def createCSV(self):
         print(" csv is pressed!!")
         self.agent.doCreateCSV()
 
-    def onStatusChanged(self, status):
-        self.ui.lbl_server_status.setText(status)
-
+    def onStatusChanged(self, label_name, text):
+        mapping = {'server_status': self.ui.lbl_server_status,
+                   'dB': self.ui.label_4,
+                   'KDE': self.ui.label_5,
+                   'MSE': self.ui.label_6,
+                   'result': self.ui.label_6,
+                   }
+        mapping.get(label_name).setText(text)
+        print(label_name, '=', text)
 
     def onMyToolBarButtonClick(self, s):
         print("click", s)

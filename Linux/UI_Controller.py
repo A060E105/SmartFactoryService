@@ -8,6 +8,7 @@ import time
 import socket
 import threading
 import pandas as pd
+from PySide6.QtCore import QObject, Signal
 
 from Logger import get_logger
 from config import Configuration
@@ -18,9 +19,11 @@ log = get_logger()
 CONFIG = Configuration()
 
 
-class UIController(object):
-    def __init__(self, ui):
-        self.ui = ui
+class UIController(QObject):
+    change_text = Signal(str, str)
+
+    def __init__(self):
+        super().__init__()
         virtual_io = VirtualIO()
         virtual_io.set_callback(self.start_analysis)
         self.io_ctrl = IOCtrl(virtual_io)
@@ -34,8 +37,10 @@ class UIController(object):
     def start_analysis(self):
         self.io_ctrl.disable()
         # TODO(): hide result text
+        self.__clear_result()
         filename = f"{int(time.time())}_{CONFIG.device_name}"
         # TODO(): set status text as recording
+        self.__set_status('recording...')
         response = self.__send_socket(filename=filename)
         log.debug(f"response: {response}")
 
@@ -66,6 +71,27 @@ class UIController(object):
 
     def check_server_start(self, reconnected=False):
         pass
+
+    def __clear_result(self) -> None:
+        """
+        清除結果文字
+        """
+        self.__set_view_text('result', '')
+
+    def __set_result(self, text) -> None:
+        """
+        設定結果文字
+        """
+        self.__set_view_text('result', text)
+
+    def __set_status(self, text):
+        self.__set_view_text('status', text)
+
+    def __set_view_text(self, label, text):
+        """
+        設定畫面上的文字，label 為物件名稱
+        """
+        self.change_text.emit(label, str(text))
 
     @staticmethod
     def __send_socket(action='all', filename='', config_name=None) -> dict:

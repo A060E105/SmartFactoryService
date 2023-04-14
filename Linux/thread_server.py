@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
 import re
+import os
+import sys
+import json
 import socket
 import threading
-import json
+import subprocess
 import sounddevice as sd
+from datetime import datetime
 from multiprocessing import Queue
 from SmartFactoryService import Audio
+
 import SmartFactoryService as SFS
 from config import Configuration
 from Logger import get_logger
-import subprocess
-
-import os
-import sys
-from datetime import datetime
+from database import create_session, AIResult
 
 import win32api
 
@@ -146,6 +147,16 @@ class ClientThread(threading.Thread):
                 result_list = queue.get()
                 result = json.dumps(result_list)
                 result += '\r\n'
+                if action == action_list[0]:
+                    # TODO(): save result to the sqlite
+                    tmp_result = result_list.get('result')[0]
+                    KDE_score = result_list.get('KDE_score')[0]
+                    MSE_score = result_list.get('MSE_score')[0]
+                    ai_result = AIResult(file_name=filename, kde=KDE_score, mse=MSE_score, result=tmp_result)
+                    session = create_session()
+                    session.add(ai_result)
+                    session.commit()
+                    session.close()
             else:
                 result = json.dumps({'status': 0, 'result': ['???']})
 
