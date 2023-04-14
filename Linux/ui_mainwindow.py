@@ -11,20 +11,25 @@
 from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
     QMetaObject, QObject, QPoint, QRect,
     QSize, QTime, QUrl, Qt)
-from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
-    QFont, QFontDatabase, QGradient, QIcon,
-    QImage, QKeySequence, QLinearGradient, QPainter,
-    QPalette, QPixmap, QRadialGradient, QTransform)
+from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
+    QCursor, QFont, QFontDatabase, QGradient,
+    QIcon, QImage, QKeySequence, QLinearGradient,
+    QPainter, QPalette, QPixmap, QRadialGradient,
+    QTransform)
 from PySide6.QtWidgets import (QApplication, QGridLayout, QHBoxLayout, QHeaderView,
-    QLabel, QMainWindow, QMenuBar, QPushButton,
-    QSizePolicy, QStatusBar, QTableWidget, QTableWidgetItem,
-    QWidget)
+    QLabel, QMainWindow, QMenu, QMenuBar,
+    QPushButton, QSizePolicy, QStatusBar, QTableWidget,
+    QTableWidgetItem, QWidget)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
         MainWindow.resize(800, 600)
+        self.actioncreate_csv = QAction(MainWindow)
+        self.actioncreate_csv.setObjectName(u"actioncreate_csv")
+        self.actionrestart_server = QAction(MainWindow)
+        self.actionrestart_server.setObjectName(u"actionrestart_server")
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.tableWidget = QTableWidget(self.centralwidget)
@@ -113,12 +118,12 @@ class Ui_MainWindow(object):
         self.label_8.setFont(font)
         self.label_8.setScaledContents(False)
         self.label_8.setAlignment(Qt.AlignCenter)
-        self.label_9 = QLabel(self.centralwidget)
-        self.label_9.setObjectName(u"label_9")
-        self.label_9.setGeometry(QRect(160, 90, 134, 51))
-        self.label_9.setFont(font)
-        self.label_9.setScaledContents(False)
-        self.label_9.setAlignment(Qt.AlignCenter)
+        self.lbl_server_status = QLabel(self.centralwidget)
+        self.lbl_server_status.setObjectName(u"lbl_server_status")
+        self.lbl_server_status.setGeometry(QRect(160, 90, 134, 51))
+        self.lbl_server_status.setFont(font)
+        self.lbl_server_status.setScaledContents(False)
+        self.lbl_server_status.setAlignment(Qt.AlignCenter)
         self.label_10 = QLabel(self.centralwidget)
         self.label_10.setObjectName(u"label_10")
         self.label_10.setGeometry(QRect(160, 160, 134, 51))
@@ -129,10 +134,21 @@ class Ui_MainWindow(object):
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
         self.menubar.setGeometry(QRect(0, 0, 800, 24))
+        self.menubar.setMinimumSize(QSize(20, 20))
+        self.menubar.setNativeMenuBar(False)
+        self.menuFile = QMenu(self.menubar)
+        self.menuFile.setObjectName(u"menuFile")
+        self.menuOption = QMenu(self.menubar)
+        self.menuOption.setObjectName(u"menuOption")
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QStatusBar(MainWindow)
         self.statusbar.setObjectName(u"statusbar")
         MainWindow.setStatusBar(self.statusbar)
+
+        self.menubar.addAction(self.menuFile.menuAction())
+        self.menubar.addAction(self.menuOption.menuAction())
+        self.menuFile.addAction(self.actioncreate_csv)
+        self.menuOption.addAction(self.actionrestart_server)
 
         self.retranslateUi(MainWindow)
 
@@ -141,6 +157,8 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"MainWindow", None))
+        self.actioncreate_csv.setText(QCoreApplication.translate("MainWindow", u"create csv", None))
+        self.actionrestart_server.setText(QCoreApplication.translate("MainWindow", u"restart server", None))
         self.pushButton.setText(QCoreApplication.translate("MainWindow", u"Run Test", None))
         self.label_3.setText(QCoreApplication.translate("MainWindow", u"AI Score2", None))
         self.label_2.setText(QCoreApplication.translate("MainWindow", u"AI Score1", None))
@@ -150,7 +168,9 @@ class Ui_MainWindow(object):
         self.label_6.setText(QCoreApplication.translate("MainWindow", u"35.3", None))
         self.label_7.setText(QCoreApplication.translate("MainWindow", u"Server \u72c0\u614b", None))
         self.label_8.setText(QCoreApplication.translate("MainWindow", u"\u6e2c\u8a66\u72c0\u614b", None))
-        self.label_9.setText(QCoreApplication.translate("MainWindow", u"\u672a\u555f\u52d5", None))
+        self.lbl_server_status.setText(QCoreApplication.translate("MainWindow", u"\u672a\u555f\u52d5", None))
         self.label_10.setText(QCoreApplication.translate("MainWindow", u"\u5f85\u6a5f\u4e2d", None))
+        self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"File", None))
+        self.menuOption.setTitle(QCoreApplication.translate("MainWindow", u"Option", None))
     # retranslateUi
 
