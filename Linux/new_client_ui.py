@@ -49,9 +49,9 @@ class MainWindow(QMainWindow):
 
     def onStatusChanged(self, label_name, text):
         mapping = {'server_status': self.ui.lbl_server_status,
-                   'dB': self.ui.label_4,
-                   'KDE': self.ui.label_5,
-                   'MSE': self.ui.label_6,
+                   'dB': self.ui.lbl_dB,
+                   'KDE': self.ui.lbl_KDE,
+                   'MSE': self.ui.lbl_MSE,
                    'result': self.ui.label_6,
                    }
         mapping.get(label_name).setText(text)
