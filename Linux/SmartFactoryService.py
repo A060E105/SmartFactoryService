@@ -776,6 +776,22 @@ class SmartFactoryService:
             result = ["has not found device", "please check your device"]
             self.queue.put(result)
 
+    def __get_dB(self):
+        return 35.3
+    def __get_ai_score1(self):
+        return 35
+    def __get_ai_score2(self):
+        return 21
+
+    def __get_freq_analysis(self):
+        return 'OK'
+
+    def __get_ai_noise_analysis(self):
+        return 'OK'
+
+    def __get_final_result(self):
+        return 'PASS'
+
     def comb_spec_AI(self, filename, gpu_lock, queue) -> None:
         gpu_lock.acquire()
         try:
@@ -785,6 +801,14 @@ class SmartFactoryService:
             result = dict(self.Result(status=0, model=[CONFIG.model_name], result=[response])._asdict())
             result['KDE_score'] = [density]
             result['MSE_score'] = [thresholds]
+            result['dB'] = self.__get_dB()
+            result['ai_score1'] = self.__get_ai_score1()
+            result['ai_score2'] = self.__get_ai_score2()
+            result['freq_analysis'] = self.__get_freq_analysis()
+            result['ai_noise_analysis'] = self.__get_ai_noise_analysis()
+            result['final_result'] = self.__get_final_result()
+
+
             print(f"{result}")
             queue.put(result)
         finally:

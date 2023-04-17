@@ -16,16 +16,16 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
     QIcon, QImage, QKeySequence, QLinearGradient,
     QPainter, QPalette, QPixmap, QRadialGradient,
     QTransform)
-from PySide6.QtWidgets import (QApplication, QGridLayout, QHBoxLayout, QHeaderView,
-    QLabel, QMainWindow, QMenu, QMenuBar,
-    QPushButton, QSizePolicy, QStatusBar, QTableWidget,
-    QTableWidgetItem, QWidget)
+from PySide6.QtWidgets import (QApplication, QGraphicsView, QGridLayout, QHBoxLayout,
+    QHeaderView, QLabel, QMainWindow, QMenu,
+    QMenuBar, QPushButton, QSizePolicy, QStatusBar,
+    QTableWidget, QTableWidgetItem, QWidget)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(918, 708)
+        MainWindow.resize(1223, 708)
         self.actioncreate_csv = QAction(MainWindow)
         self.actioncreate_csv.setObjectName(u"actioncreate_csv")
         self.actionrestart_server = QAction(MainWindow)
@@ -34,20 +34,25 @@ class Ui_MainWindow(object):
         self.centralwidget.setObjectName(u"centralwidget")
         self.tbl_result = QTableWidget(self.centralwidget)
         self.tbl_result.setObjectName(u"tbl_result")
-        self.tbl_result.setGeometry(QRect(30, 320, 411, 261))
+        self.tbl_result.setGeometry(QRect(30, 320, 611, 261))
         self.btn_predict = QPushButton(self.centralwidget)
         self.btn_predict.setObjectName(u"btn_predict")
         self.btn_predict.setGeometry(QRect(30, 240, 171, 61))
         self.btn_predict.setAutoFillBackground(False)
         self.horizontalLayoutWidget = QWidget(self.centralwidget)
         self.horizontalLayoutWidget.setObjectName(u"horizontalLayoutWidget")
-        self.horizontalLayoutWidget.setGeometry(QRect(470, 10, 421, 171))
+        self.horizontalLayoutWidget.setGeometry(QRect(660, 10, 421, 171))
         self.horizontalLayout = QHBoxLayout(self.horizontalLayoutWidget)
         self.horizontalLayout.setObjectName(u"horizontalLayout")
         self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
+        self.graphicsView = QGraphicsView(self.horizontalLayoutWidget)
+        self.graphicsView.setObjectName(u"graphicsView")
+
+        self.horizontalLayout.addWidget(self.graphicsView)
+
         self.gridLayoutWidget = QWidget(self.centralwidget)
         self.gridLayoutWidget.setObjectName(u"gridLayoutWidget")
-        self.gridLayoutWidget.setGeometry(QRect(470, 210, 421, 191))
+        self.gridLayoutWidget.setGeometry(QRect(660, 210, 421, 191))
         self.gridLayout = QGridLayout(self.gridLayoutWidget)
         self.gridLayout.setObjectName(u"gridLayout")
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
@@ -103,13 +108,13 @@ class Ui_MainWindow(object):
 
         self.gridLayoutWidget_2 = QWidget(self.centralwidget)
         self.gridLayoutWidget_2.setObjectName(u"gridLayoutWidget_2")
-        self.gridLayoutWidget_2.setGeometry(QRect(470, 420, 421, 161))
+        self.gridLayoutWidget_2.setGeometry(QRect(660, 420, 421, 161))
         self.gridLayout_2 = QGridLayout(self.gridLayoutWidget_2)
         self.gridLayout_2.setObjectName(u"gridLayout_2")
         self.gridLayout_2.setContentsMargins(0, 0, 0, 0)
         self.gridLayoutWidget_3 = QWidget(self.centralwidget)
         self.gridLayoutWidget_3.setObjectName(u"gridLayoutWidget_3")
-        self.gridLayoutWidget_3.setGeometry(QRect(30, 50, 411, 181))
+        self.gridLayoutWidget_3.setGeometry(QRect(30, 50, 531, 181))
         self.gridLayout_3 = QGridLayout(self.gridLayoutWidget_3)
         self.gridLayout_3.setObjectName(u"gridLayout_3")
         self.gridLayout_3.setContentsMargins(0, 0, 0, 0)
@@ -148,7 +153,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 918, 24))
+        self.menubar.setGeometry(QRect(0, 0, 1223, 24))
         self.menubar.setMinimumSize(QSize(20, 20))
         self.menubar.setNativeMenuBar(False)
         self.menuFile = QMenu(self.menubar)

@@ -67,6 +67,16 @@ class MainWindow(QMainWindow):
                 item = QTableWidgetItem(str(cell_data))
                 self.ui.tbl_result.setItem(row, column, item)
 
+    def update_result_info(self, df: pd.DataFrame):
+        get_db = 35.3
+        self.on_text_changed(self, 'dB', get_db)
+        get_ai_score1 = 35
+        self.on_text_changed(self, 'KDE', get_ai_score1)
+        get_ai_score2 = 21
+        self.on_text_changed(self, 'MSE', get_ai_score2)
+        
+
+
     def do_predict(self):
         # print('you pushed Btn!!')
         threading.Thread(target=self.agent.start_analysis).start()
