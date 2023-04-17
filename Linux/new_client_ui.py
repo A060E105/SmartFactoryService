@@ -4,7 +4,8 @@ from PySide6.QtCore import QObject, Signal
 from PySide6.QtGui import QAction, QIcon
 from ui_mainwindow import Ui_MainWindow
 
-
+# http://c.biancheng.net/view/1863.html
+# Qt QTableWidget 基本操作
 # class TEDLayout:
 #     def setDefault:
 
@@ -49,11 +50,13 @@ class MainWindow(QMainWindow):
 
     def onStatusChanged(self, label_name, text):
         mapping = {'server_status': self.ui.lbl_server_status,
+                   'predict_status': self.ui.lbl_predict_status,
                    'dB': self.ui.lbl_dB,
                    'KDE': self.ui.lbl_KDE,
                    'MSE': self.ui.lbl_MSE,
-                   'result': self.ui.label_6,
+                   # 'result': self.ui.label_6,
                    }
+
         mapping.get(label_name).setText(text)
         print(label_name, '=', text)
 
