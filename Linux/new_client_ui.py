@@ -12,17 +12,18 @@ from ui_mainwindow import Ui_MainWindow
 
 class TEDClientAgent(QObject):
 
-    statusChanged = Signal(str, str)
+    statusTxtChanged = Signal(str, str)
+    statusColorChanged = Signal(str, str)
 
     def __init__(self):
         super().__init__()
 
     def doCreateCSV(self):
         print("agent create csv")
-        self.statusChanged.emit("server_status", 'Hello World!!!')
-        self.statusChanged.emit("dB", '30.5')
-        self.statusChanged.emit("KDE", '40.5')
-        self.statusChanged.emit("MSE", '50.5')
+        self.statusTxtChanged.emit("server_status", 'Hello World!!!')
+        self.statusTxtChanged.emit("dB", '30.5')
+        self.statusTxtChanged.emit("KDE", '40.5')
+        self.statusTxtChanged.emit("MSE", '50.5')
 
     def run(self):
         print('press run.')
@@ -39,7 +40,13 @@ class MainWindow(QMainWindow):
         self.ui.lbl_server_status.setText("待機中！")
         self.ui.actioncreate_csv.triggered.connect(self.agent.doCreateCSV)
         # self.ui.actioncreate_csv.triggered.connect(self.createCSV)
-        agent.statusChanged.connect(self.onStatusChanged)
+        agent.statusTxtChanged.connect(self.onStatusChanged)
+
+        self.ui.btn_predict.clicked.connect(self.do_predict)
+
+    def do_predict(self):
+
+        print('you pushed Btn!!')
 
     def test(self):
         self.agent.run()
