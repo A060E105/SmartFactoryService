@@ -1,8 +1,13 @@
 import sys
-from PySide6.QtWidgets import QApplication, QMainWindow
+import threading
+
+import pandas as pd
+from PySide6.QtWidgets import QApplication, QMainWindow, QTableWidgetItem
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtGui import QAction, QIcon
 from ui_mainwindow import Ui_MainWindow
+
+from UI_Controller import UIController
 
 # http://c.biancheng.net/view/1863.html
 # Qt QTableWidget 基本操作
@@ -31,31 +36,42 @@ class TEDClientAgent(QObject):
 
 class MainWindow(QMainWindow):
 
-    def __init__(self, agent: TEDClientAgent):
+    def __init__(self, agent: UIController):
         self.agent = agent
 
         super(MainWindow, self).__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        self.ui.lbl_server_status.setText("待機中！")
-        self.ui.actioncreate_csv.triggered.connect(self.agent.doCreateCSV)
-        # self.ui.actioncreate_csv.triggered.connect(self.createCSV)
-        agent.statusTxtChanged.connect(self.onStatusChanged)
-
+        agent.change_text.connect(self.on_text_changed)
+        agent.change_style.connect(self.on_style_changed)
+        agent.table_updated.connect(self.updated_table)
         self.ui.btn_predict.clicked.connect(self.do_predict)
+        self.ui.actionrestart_server.triggered.connect(agent.restart_server)
+
+        # initialized
+        self.ui.lbl_predict_status.setText('等待按下測試按鈕')
+        threading.Thread(target=self.agent.check_server_start).start()
+        # table initialized
+        self.ui.tbl_result.setColumnCount(5)
+        self.ui.tbl_result.setHorizontalHeaderLabels(['filename', 'result', 'KDE', 'MSE', 'datetime'])
+
+    def updated_table(self, df: pd.DataFrame):
+        self.ui.tbl_result.clear()
+        row_count, col_count = df.shape
+        self.ui.tbl_result.setRowCount(row_count)
+        self.ui.tbl_result.setColumnCount(col_count)
+        self.ui.tbl_result.setHorizontalHeaderLabels(df.columns)
+
+        for row, row_data in df.iterrows():
+            for column, cell_data in enumerate(row_data):
+                item = QTableWidgetItem(str(cell_data))
+                self.ui.tbl_result.setItem(row, column, item)
 
     def do_predict(self):
+        # print('you pushed Btn!!')
+        threading.Thread(target=self.agent.start_analysis).start()
 
-        print('you pushed Btn!!')
-
-    def test(self):
-        self.agent.run()
-
-    def createCSV(self):
-        print(" csv is pressed!!")
-        self.agent.doCreateCSV()
-
-    def onStatusChanged(self, label_name, text):
+    def on_text_changed(self, label_name: str, text: str) -> None:
         mapping = {'server_status': self.ui.lbl_server_status,
                    'predict_status': self.ui.lbl_predict_status,
                    'dB': self.ui.lbl_dB,
@@ -64,17 +80,21 @@ class MainWindow(QMainWindow):
                    # 'result': self.ui.label_6,
                    }
 
-        mapping.get(label_name).setText(text)
-        print(label_name, '=', text)
+        if mapping.__contains__(label_name):
+            mapping.get(label_name).setText(text)
+            print(label_name, '=', text)
 
-    def onMyToolBarButtonClick(self, s):
-        print("click", s)
+    def on_style_changed(self, label_name: str, style: str) -> None:
+        mapping = {'server_status': self.ui.lbl_server_status}
+        mapping.get(label_name).setStyleSheet(style)
 
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    agent = TEDClientAgent()
-    window = MainWindow(agent)
+    # agent = TEDClientAgent()
+    # window = MainWindow(agent)
+    ui_ctrl = UIController()
+    window = MainWindow(ui_ctrl)
     window.show()
 
     sys.exit(app.exec())
