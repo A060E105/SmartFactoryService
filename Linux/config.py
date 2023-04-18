@@ -8,10 +8,10 @@
         configuration in any process.
 """
 
-import json
 import os
+import json
 
-last_version = '2.8.4'
+last_version = '3.0.0'
 
 
 class Configuration:
@@ -50,6 +50,14 @@ class Configuration:
     @property
     def encoder_model_name(self) -> str:
         return self.data['encoder_model_name']
+
+    @property
+    def model_id(self) -> str:
+        return self.data.get('model_use_id', 'test')
+
+    @property
+    def model_version(self) -> str:
+        return self.data.get('model_version', '1.2')
 
     @property
     def device_name(self) -> str:

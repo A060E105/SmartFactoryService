@@ -1,8 +1,8 @@
 import sys
 import threading
-
+import numpy as np
 import pandas as pd
-from PySide6.QtWidgets import QApplication, QMainWindow, QTableWidgetItem
+from PySide6.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtGui import QAction, QIcon
 from ui_mainwindow import Ui_MainWindow
@@ -38,12 +38,14 @@ class MainWindow(QMainWindow):
 
     def __init__(self, agent: UIController):
         self.agent = agent
+        self.__result_df = pd.DataFrame()
 
         super(MainWindow, self).__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         agent.change_text.connect(self.on_text_changed)
         agent.change_style.connect(self.on_style_changed)
+        agent.clear_result.connect(self.clear_result_info)
         agent.table_updated.connect(self.updated_table)
         self.ui.btn_predict.clicked.connect(self.do_predict)
         self.ui.actionrestart_server.triggered.connect(agent.restart_server)
@@ -52,10 +54,14 @@ class MainWindow(QMainWindow):
         self.ui.lbl_predict_status.setText('等待按下測試按鈕')
         threading.Thread(target=self.agent.check_server_start).start()
         # table initialized
+        self.clear_result_info()
         self.ui.tbl_result.setColumnCount(5)
         self.ui.tbl_result.setHorizontalHeaderLabels(['filename', 'result', 'KDE', 'MSE', 'datetime'])
 
+        # QMessageBox.critical(None, 'Error', 'error')
+
     def updated_table(self, df: pd.DataFrame):
+        self.__result_df = df
         self.ui.tbl_result.clear()
         row_count, col_count = df.shape
         self.ui.tbl_result.setRowCount(row_count)
@@ -67,18 +73,27 @@ class MainWindow(QMainWindow):
                 item = QTableWidgetItem(str(cell_data))
                 self.ui.tbl_result.setItem(row, column, item)
 
-    def update_result_info(self, df: pd.DataFrame):
-        get_db = 35.3
-        self.on_text_changed(self, 'dB', get_db)
-        get_ai_score1 = 35
-        self.on_text_changed(self, 'KDE', get_ai_score1)
-        get_ai_score2 = 21
-        self.on_text_changed(self, 'MSE', get_ai_score2)
+        self.update_result_info(df.iloc[-1, :])
 
+    def update_result_info(self, data: pd.Series):
+        self.on_text_changed('dB', str(np.round(data['decibel'], 1)))
+        self.on_text_changed('KDE', str(np.round(data['ai_score1'], 1)))
+        self.on_text_changed('MSE', str(np.round(data['ai_score2'], 1)))
+        for item_name in ['freq_result', 'ai_result', 'final_result']:
+            color = 'green' if data[item_name] in ['OK', 'PASS'] else 'red'
+            style = f"background: {color}"
+            self.on_text_changed(item_name, data[item_name])
+            self.on_style_changed(item_name, style)
 
+    def clear_result_info(self):
+        for item_name in ['dB', 'KDE', 'MSE']:
+            self.on_text_changed(item_name, '')
+        for item_name in ['freq_result', 'ai_result', 'final_result']:
+            style = "background: transparent"
+            self.on_text_changed(item_name, '')
+            self.on_style_changed(item_name, style)
 
     def do_predict(self):
-        # print('you pushed Btn!!')
         threading.Thread(target=self.agent.start_analysis).start()
 
     def on_text_changed(self, label_name: str, text: str) -> None:
@@ -87,7 +102,9 @@ class MainWindow(QMainWindow):
                    'dB': self.ui.lbl_dB,
                    'KDE': self.ui.lbl_KDE,
                    'MSE': self.ui.lbl_MSE,
-                   # 'result': self.ui.label_6,
+                   'freq_result': self.ui.lbl_freq_analysis,
+                   'ai_result': self.ui.lbl_AI_noise_analysis,
+                   'final_result': self.ui.lbl_final_result,
                    }
 
         if mapping.__contains__(label_name):
@@ -95,8 +112,13 @@ class MainWindow(QMainWindow):
             print(label_name, '=', text)
 
     def on_style_changed(self, label_name: str, style: str) -> None:
-        mapping = {'server_status': self.ui.lbl_server_status}
-        mapping.get(label_name).setStyleSheet(style)
+        mapping = {'server_status': self.ui.lbl_server_status,
+                   'freq_result': self.ui.lbl_freq_analysis,
+                   'ai_result': self.ui.lbl_AI_noise_analysis,
+                   'final_result': self.ui.lbl_final_result,
+                   }
+        if mapping.__contains__(label_name):
+            mapping.get(label_name).setStyleSheet(style)
 
 
 if __name__ == "__main__":

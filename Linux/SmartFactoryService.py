@@ -397,6 +397,11 @@ class Audio:
             log.debug("has device")
             return True
 
+    def get_decibel(self) -> float:
+        y, sr = soundfile.read(f"{SOURCE_PATH}{self.filename}.wav")
+        ref = 0.00002
+        return 20 * np.log10(np.sqrt(np.mean(np.absolute(y) ** 2)) / ref)
+
 
 # =============================================================================
 #       Specgram class
@@ -707,9 +712,10 @@ class SmartFactoryService:
                 self.au.save_wav()
                 wav_to_mp3(filename=self.filename)
                 mp3_to_wav(filename=self.filename)
-                my_thread = Thread(self.comb_spec_AI(self.filename, gpu_lock=self.gpu_lock, queue=self.queue))
+                my_thread = Thread(self.combine_spec_ai(self.filename, gpu_lock=self.gpu_lock, queue=self.queue))
                 my_thread.start()
                 my_thread.join()
+                self.combine_result()
                 analysis_result = self.queue.get()
                 self.queue.put(analysis_result)
                 rm_file(path=SOURCE_PATH, filename=self.filename + '.wav')
@@ -753,7 +759,7 @@ class SmartFactoryService:
     def spec_ai(self) -> None:
         file_path = f'{SOURCE_PATH}{self.filename}.wav'
         if os.path.exists(file_path):
-            my_thread = Thread(self.comb_spec_AI(self.filename, gpu_lock=self.gpu_lock, queue=self.queue))
+            my_thread = Thread(self.combine_spec_ai(self.filename, gpu_lock=self.gpu_lock, queue=self.queue))
             my_thread.start()
             my_thread.join()
         else:
@@ -768,7 +774,7 @@ class SmartFactoryService:
             time.sleep(5)       # delay 5 second
             boot_au.record()    # record again
             boot_au.save_wav()
-            my_thread = Thread(self.comb_spec_AI("boot_init", gpu_lock=self.gpu_lock, queue=self.queue))
+            my_thread = Thread(self.combine_spec_ai("boot_init", gpu_lock=self.gpu_lock, queue=self.queue))
             my_thread.start()
             my_thread.join()
             self.rm_init_file()     # remove boot initialize file
@@ -776,23 +782,33 @@ class SmartFactoryService:
             result = ["has not found device", "please check your device"]
             self.queue.put(result)
 
-    def __get_dB(self):
-        return 35.3
-    def __get_ai_score1(self):
-        return 35
-    def __get_ai_score2(self):
-        return 21
+    @staticmethod
+    def __get_ai_score1(kde):
+        return kde
 
-    def __get_freq_analysis(self):
+    @staticmethod
+    def __get_ai_score2(mse):
+        return mse
+
+    @staticmethod
+    def __get_freq_analysis():
         return 'OK'
 
-    def __get_ai_noise_analysis(self):
-        return 'OK'
+    @staticmethod
+    def __get_final_result(result1, result2):
+        return 'FAIL' if 'NG' in [result1, result2] else 'PASS'
 
-    def __get_final_result(self):
-        return 'PASS'
+    def combine_result(self):
+        data = self.queue.get()
+        data['dB'] = self.au.get_decibel()
+        data['ai_score1'] = self.__get_ai_score1(data.get('KDE_score')[0])
+        data['ai_score2'] = self.__get_ai_score2(data.get('MSE_score')[0])
+        data['freq_result'] = self.__get_freq_analysis()
+        data['ai_result'] = data.get('result')[0]
+        data['final_result'] = self.__get_final_result(data['freq_result'], data['ai_result'])
+        self.queue.put(data)
 
-    def comb_spec_AI(self, filename, gpu_lock, queue) -> None:
+    def combine_spec_ai(self, filename, gpu_lock, queue) -> None:
         gpu_lock.acquire()
         try:
             Specgram(filename).toSpecgram()
@@ -801,13 +817,6 @@ class SmartFactoryService:
             result = dict(self.Result(status=0, model=[CONFIG.model_name], result=[response])._asdict())
             result['KDE_score'] = [density]
             result['MSE_score'] = [thresholds]
-            result['dB'] = self.__get_dB()
-            result['ai_score1'] = self.__get_ai_score1()
-            result['ai_score2'] = self.__get_ai_score2()
-            result['freq_analysis'] = self.__get_freq_analysis()
-            result['ai_noise_analysis'] = self.__get_ai_noise_analysis()
-            result['final_result'] = self.__get_final_result()
-
 
             print(f"{result}")
             queue.put(result)

@@ -14,7 +14,7 @@ from SmartFactoryService import Audio
 import SmartFactoryService as SFS
 from config import Configuration
 from Logger import get_logger
-from database import create_session, AIResult
+from database import create_session, AIResult, create_table
 
 import win32api
 
@@ -150,9 +150,17 @@ class ClientThread(threading.Thread):
                 if action == action_list[0]:
                     # TODO(): save result to the sqlite
                     tmp_result = result_list.get('result')[0]
-                    KDE_score = result_list.get('KDE_score')[0]
-                    MSE_score = result_list.get('MSE_score')[0]
-                    ai_result = AIResult(file_name=filename, kde=KDE_score, mse=MSE_score, result=tmp_result)
+                    kde_score = result_list.get('KDE_score')[0]
+                    mse_score = result_list.get('MSE_score')[0]
+                    decibel = result_list.get('dB')
+                    ai_score1 = result_list.get('ai_score1')
+                    ai_score2 = result_list.get('ai_score2')
+                    freq_result = result_list.get('freq_result')
+                    final_result = result_list.get('final_result')
+                    ai_result = AIResult(file_name=filename, kde=kde_score, mse=mse_score, decibel=decibel,
+                                         ai_score1=ai_score1, ai_score2=ai_score2, freq_result=freq_result,
+                                         ai_result=tmp_result, final_result=final_result,
+                                         model_use_id=CONFIG.model_id, model_version=CONFIG.model_version)
                     session = create_session()
                     session.add(ai_result)
                     session.commit()
@@ -189,6 +197,8 @@ def boot_init() -> None:
 
 set_input_volume_max()      # set microphone input volume max
 boot_init()     # boot initiation
+
+create_table()  # sqlite initialize
 
 LOCALHOST = ""
 PORT = CONFIG.port

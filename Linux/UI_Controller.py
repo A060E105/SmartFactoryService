@@ -10,6 +10,7 @@ import threading
 import pandas as pd
 from typing import Union
 from PySide6.QtCore import QObject, Signal
+from PySide6.QtWidgets import QMessageBox
 
 from Logger import get_logger
 from config import Configuration
@@ -25,6 +26,7 @@ class UIController(QObject):
     change_text = Signal(str, str)
     change_style = Signal(str, str)
     table_updated = Signal(pd.DataFrame)
+    clear_result = Signal()
 
     def __init__(self):
         super().__init__()
@@ -39,7 +41,7 @@ class UIController(QObject):
     def calibration(self):
         pass
 
-    def start_analysis(self):
+    def start_analysis(self, event=None):
         self.io_ctrl.disable()
         self.__clear_result()
         filename = f"{int(time.time())}_{CONFIG.device_name}"
@@ -51,18 +53,15 @@ class UIController(QObject):
             if response.get('status'):
                 raise Exception
 
-            result = response.get('result')[0]
-            KDE_score = response.get('KDE_score')[0]
-            MSE_score = response.get('MSE_score')[0]
-
             # updated table
             self.__updated_table()
 
-            # TODO(): show result text
             # TODO(): record to the CSV
 
         except Exception as e:
             # TODO(): show error message
+            self.__show_error(response.get('status'))
+            # threading.Thread(target=self.__show_error, args=(response.get('status'), )).start()
             print(e)
             threading.Thread(target=self.check_server_start, args=(True,)).start()
         finally:
@@ -93,8 +92,22 @@ class UIController(QObject):
 
     def __updated_table(self):
         df = pd.read_sql_query(self.session.query(AIResult).statement, self.session.bind)
-        df = df[['file_name', 'result', 'kde', 'mse', 'create_at']]
+        df = df[['file_name', 'decibel', 'ai_score1', 'ai_score2', 'freq_result', 'ai_result', 'final_result',
+                 'created_at']]
         self.table_updated.emit(df)
+
+    def __show_error(self, code):
+        parser_error_code = {
+            0: '程式有其他異常錯誤。',
+            1: '系統沒有回應，重新連接中。',
+            2: '請檢查麥克風裝置是否連接。',
+            3: '無效的動作指令。',
+            4: '檔案名稱不可為空。',
+            5: '麥克風正在使用中，請稍後再進行操作。'
+        }
+        error_code = f"Error code[{code}]"
+        error_msg = parser_error_code.get(code) + error_code
+        # threading.Thread(target=QMessageBox.critical, args=(None, 'Error', error_msg)).start()
 
     def __set_server_status(self, status, count=None):
         mapping = {
@@ -114,13 +127,8 @@ class UIController(QObject):
         """
         清除結果文字
         """
-        self.__set_view_text('result', '')
-
-    def __set_result(self, text) -> None:
-        """
-        設定結果文字
-        """
-        self.__set_view_text('result', text)
+        self.clear_result.emit()
+        # self.__set_view_text('result', '')
 
     def __set_status(self, text):
         self.__set_view_text('predict_status', text)
