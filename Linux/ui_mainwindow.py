@@ -34,7 +34,7 @@ class Ui_MainWindow(object):
         self.centralwidget.setObjectName(u"centralwidget")
         self.tbl_result = QTableWidget(self.centralwidget)
         self.tbl_result.setObjectName(u"tbl_result")
-        self.tbl_result.setGeometry(QRect(30, 320, 611, 261))
+        self.tbl_result.setGeometry(QRect(30, 320, 611, 331))
         self.btn_predict = QPushButton(self.centralwidget)
         self.btn_predict.setObjectName(u"btn_predict")
         self.btn_predict.setGeometry(QRect(30, 240, 171, 61))
@@ -106,12 +106,6 @@ class Ui_MainWindow(object):
 
         self.gridLayout.addWidget(self.lbl_MSE, 1, 2, 1, 1)
 
-        self.gridLayoutWidget_2 = QWidget(self.centralwidget)
-        self.gridLayoutWidget_2.setObjectName(u"gridLayoutWidget_2")
-        self.gridLayoutWidget_2.setGeometry(QRect(660, 420, 421, 161))
-        self.gridLayout_2 = QGridLayout(self.gridLayoutWidget_2)
-        self.gridLayout_2.setObjectName(u"gridLayout_2")
-        self.gridLayout_2.setContentsMargins(0, 0, 0, 0)
         self.gridLayoutWidget_3 = QWidget(self.centralwidget)
         self.gridLayoutWidget_3.setObjectName(u"gridLayoutWidget_3")
         self.gridLayoutWidget_3.setGeometry(QRect(30, 50, 531, 181))
@@ -149,6 +143,59 @@ class Ui_MainWindow(object):
         self.label_7.setAlignment(Qt.AlignCenter)
 
         self.gridLayout_3.addWidget(self.label_7, 0, 0, 1, 1)
+
+        self.horizontalLayoutWidget_2 = QWidget(self.centralwidget)
+        self.horizontalLayoutWidget_2.setObjectName(u"horizontalLayoutWidget_2")
+        self.horizontalLayoutWidget_2.setGeometry(QRect(660, 410, 421, 41))
+        self.horizontalLayout_2 = QHBoxLayout(self.horizontalLayoutWidget_2)
+        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
+        self.horizontalLayout_2.setContentsMargins(0, 0, 0, 0)
+        self.label_5 = QLabel(self.horizontalLayoutWidget_2)
+        self.label_5.setObjectName(u"label_5")
+        self.label_5.setAlignment(Qt.AlignCenter)
+
+        self.horizontalLayout_2.addWidget(self.label_5)
+
+        self.label_4 = QLabel(self.horizontalLayoutWidget_2)
+        self.label_4.setObjectName(u"label_4")
+        self.label_4.setAlignment(Qt.AlignCenter)
+
+        self.horizontalLayout_2.addWidget(self.label_4)
+
+        self.horizontalLayoutWidget_3 = QWidget(self.centralwidget)
+        self.horizontalLayoutWidget_3.setObjectName(u"horizontalLayoutWidget_3")
+        self.horizontalLayoutWidget_3.setGeometry(QRect(660, 460, 421, 81))
+        self.horizontalLayout_3 = QHBoxLayout(self.horizontalLayoutWidget_3)
+        self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
+        self.horizontalLayout_3.setContentsMargins(0, 0, 0, 0)
+        self.lbl_freq_analysis = QLabel(self.horizontalLayoutWidget_3)
+        self.lbl_freq_analysis.setObjectName(u"lbl_freq_analysis")
+        font1 = QFont()
+        font1.setPointSize(15)
+        self.lbl_freq_analysis.setFont(font1)
+        self.lbl_freq_analysis.setAlignment(Qt.AlignCenter)
+
+        self.horizontalLayout_3.addWidget(self.lbl_freq_analysis)
+
+        self.lbl_AI_noise_analysis = QLabel(self.horizontalLayoutWidget_3)
+        self.lbl_AI_noise_analysis.setObjectName(u"lbl_AI_noise_analysis")
+        self.lbl_AI_noise_analysis.setFont(font1)
+        self.lbl_AI_noise_analysis.setAlignment(Qt.AlignCenter)
+
+        self.horizontalLayout_3.addWidget(self.lbl_AI_noise_analysis)
+
+        self.horizontalLayoutWidget_4 = QWidget(self.centralwidget)
+        self.horizontalLayoutWidget_4.setObjectName(u"horizontalLayoutWidget_4")
+        self.horizontalLayoutWidget_4.setGeometry(QRect(660, 560, 421, 91))
+        self.horizontalLayout_4 = QHBoxLayout(self.horizontalLayoutWidget_4)
+        self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
+        self.horizontalLayout_4.setContentsMargins(0, 0, 0, 0)
+        self.lbl_final_result = QLabel(self.horizontalLayoutWidget_4)
+        self.lbl_final_result.setObjectName(u"lbl_final_result")
+        self.lbl_final_result.setFont(font)
+        self.lbl_final_result.setAlignment(Qt.AlignCenter)
+
+        self.horizontalLayout_4.addWidget(self.lbl_final_result)
 
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
@@ -190,6 +237,11 @@ class Ui_MainWindow(object):
         self.label_8.setText(QCoreApplication.translate("MainWindow", u"\u6e2c\u8a66\u72c0\u614b", None))
         self.lbl_server_status.setText(QCoreApplication.translate("MainWindow", u"\u672a\u555f\u52d5", None))
         self.label_7.setText(QCoreApplication.translate("MainWindow", u"Server \u72c0\u614b", None))
+        self.label_5.setText(QCoreApplication.translate("MainWindow", u"\u983b\u8b5c\u5206\u6790", None))
+        self.label_4.setText(QCoreApplication.translate("MainWindow", u"AI\u7570\u97f3\u5206\u6790", None))
+        self.lbl_freq_analysis.setText(QCoreApplication.translate("MainWindow", u"OK", None))
+        self.lbl_AI_noise_analysis.setText(QCoreApplication.translate("MainWindow", u"OK", None))
+        self.lbl_final_result.setText(QCoreApplication.translate("MainWindow", u"PASS", None))
         self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"File", None))
         self.menuOption.setTitle(QCoreApplication.translate("MainWindow", u"Option", None))
     # retranslateUi

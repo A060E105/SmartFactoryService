@@ -74,7 +74,7 @@ class MainWindow(QMainWindow):
         self.on_text_changed(self, 'KDE', get_ai_score1)
         get_ai_score2 = 21
         self.on_text_changed(self, 'MSE', get_ai_score2)
-        
+
 
 
     def do_predict(self):
