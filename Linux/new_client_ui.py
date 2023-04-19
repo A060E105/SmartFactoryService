@@ -9,6 +9,7 @@ from ui_mainwindow import Ui_MainWindow
 
 from UI_Controller import UIController
 import matplotlib.pyplot as plt
+import os
 
 # http://c.biancheng.net/view/1863.html
 # Qt QTableWidget 基本操作
@@ -37,7 +38,8 @@ class MainWindow(QMainWindow):
         self.ui.actionrestart_server.triggered.connect(agent.restart_server)
 
         # initialized
-        self.agent.updated_table()
+        # ted temp mark
+        # self.agent.updated_table()
         self.clear_result_info()
         self.ui.lbl_predict_status.setText('等待按下測試按鈕')
         threading.Thread(target=self.agent.check_server_start).start()
@@ -66,12 +68,15 @@ class MainWindow(QMainWindow):
 
     def update_fig(self):
         df = pd.read_csv("freq_ana.csv")
-        # df2 = pd.read_csv("ted_max.csv")
         self.ui.ted_widget.axes.clear()
         ax = self.ui.ted_widget.axes
-
+        df.columns = ['freq', 'db']
         ax.semilogx(df.freq, df.db, 'b')
-        # ax.semilogx(df2.freq, df2.db, 'r')
+        # ted_added
+        if os.path.exists("one_file.csv"):
+            df2 = pd.read_csv("ted_max.csv")
+            df2.columns = ['freq', 'db']
+            ax.semilogx(df2.freq, df2.db, 'r')
         ax.grid(which='major')
         ax.grid(which='minor', linestyle=':')
         ax.set_xlabel(r'Frequency [Hz]')
@@ -103,6 +108,7 @@ class MainWindow(QMainWindow):
                 self.ui.tbl_result.setItem(row, column, item)
 
         self.update_result_info(df.iloc[-1, :])
+        self.update_fig()  # ted_added
 
     def update_result_info(self, data: pd.Series):
         self.on_text_changed('dB', str(np.round(data['decibel'], 1)))

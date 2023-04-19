@@ -44,6 +44,7 @@ from storage import storage as STORAGE
 
 from Logger import get_logger
 
+import PyOctaveBand
 # disable debugging logs
 # 0 -> all info
 # 1 -> info message not print
@@ -116,6 +117,17 @@ def mp3_to_wav(filename=None) -> None:
     os.system(cmd)
     y, sr = soundfile.read(target_path)
     soundfile.write(target_path, y, sr, 'PCM_16')
+
+# ted_added
+def wav_to_csv(filename=None) -> None:
+    fraction = 12
+    limits = [20, 16000]
+    source_path = f"{SOURCE_PATH}{filename}.wav"
+    y, fs = soundfile.read(source_path)
+    spectrum, freq_bands = PyOctaveBand.octavefilter(y, fs, fraction=fraction, limits=limits)
+    s1 = pd.Series(spectrum, index=freq_bands)
+    s1.columns = ['freq', 'db']
+    s1.to_csv(f"one_file.csv")
 
 
 def rm_file(path='', filename=None) -> None:
@@ -713,6 +725,7 @@ class SmartFactoryService:
                 self.au.save_wav()
                 wav_to_mp3(filename=self.filename)
                 mp3_to_wav(filename=self.filename)
+                wav_to_csv(filename=self.filename)  # ted added
                 my_thread = Thread(self.combine_spec_ai(self.filename, gpu_lock=self.gpu_lock, queue=self.queue))
                 my_thread.start()
                 my_thread.join()
