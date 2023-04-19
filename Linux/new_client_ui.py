@@ -8,12 +8,14 @@ from PySide6.QtGui import QAction, QIcon
 from ui_mainwindow import Ui_MainWindow
 
 from UI_Controller import UIController
+import matplotlib.pyplot as plt
 
 # http://c.biancheng.net/view/1863.html
 # Qt QTableWidget 基本操作
 # class TEDLayout:
 #     def setDefault:
 
+from mplwidget import MplWidget
 
 class TEDClientAgent(QObject):
 
@@ -58,7 +60,40 @@ class MainWindow(QMainWindow):
         self.ui.tbl_result.setColumnCount(5)
         self.ui.tbl_result.setHorizontalHeaderLabels(['filename', 'result', 'KDE', 'MSE', 'datetime'])
 
+        # sc = MplWidget(self, width=5, height=4, dpi=100)
+        # sc.axes.plot([0, 1, 2, 3, 4], [10, 1, 20, 3, 40])
+        # self.setCentralWidget(sc)
+
+        self.update_fig()
+
+        # self.ui.ted_widget.canvas.axes.set_title('aaaaa')
+
         # QMessageBox.critical(None, 'Error', 'error')
+    def update_fig(self):
+
+        df = pd.read_csv("ted_2.csv")
+        # df2 = pd.read_csv("ted_max.csv")
+        df.columns = ['freq', 'db']
+        # df2.columns = ['freq', 'db']
+        # df.plot(x='freq',y='db')
+        # fig, ax = plt.subplots()
+        # self.ui.ted_widget.axes.semilogx(df.freq, df.db, 'b')
+        ax = self.ui.ted_widget.axes
+
+        ax.semilogx(df.freq, df.db, 'b')
+        # ax.semilogx(df2.freq, df2.db, 'r')
+
+        # self.ui.ted_widget.canvas.draw()
+        ax.grid(which='major')
+        ax.grid(which='minor', linestyle=':')
+        ax.set_xlabel(r'Frequency [Hz]')
+        ax.set_ylabel('Level [dB]')
+        plt.xlim(11, 25000)
+        ax.set_xticks([16, 31.5, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000])
+        ax.set_xticklabels(['16', '31.5', '63', '125', '250', '500', '1k', '2k', '4k', '8k', '16k'])
+        plt.show()
+        # self.ui.ted_widget.canvas.axes.set_title('aaaaa')
+
 
     def updated_table(self, df: pd.DataFrame):
         self.__result_df = df

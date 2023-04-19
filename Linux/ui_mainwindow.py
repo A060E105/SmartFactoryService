@@ -16,10 +16,12 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
     QIcon, QImage, QKeySequence, QLinearGradient,
     QPainter, QPalette, QPixmap, QRadialGradient,
     QTransform)
-from PySide6.QtWidgets import (QApplication, QGraphicsView, QGridLayout, QHBoxLayout,
-    QHeaderView, QLabel, QMainWindow, QMenu,
-    QMenuBar, QPushButton, QSizePolicy, QStatusBar,
-    QTableWidget, QTableWidgetItem, QWidget)
+from PySide6.QtWidgets import (QApplication, QGridLayout, QHBoxLayout, QHeaderView,
+    QLabel, QMainWindow, QMenu, QMenuBar,
+    QPushButton, QSizePolicy, QStatusBar, QTableWidget,
+    QTableWidgetItem, QWidget)
+
+from mplwidget import MplWidget
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -41,18 +43,18 @@ class Ui_MainWindow(object):
         self.btn_predict.setAutoFillBackground(False)
         self.horizontalLayoutWidget = QWidget(self.centralwidget)
         self.horizontalLayoutWidget.setObjectName(u"horizontalLayoutWidget")
-        self.horizontalLayoutWidget.setGeometry(QRect(660, 10, 421, 171))
+        self.horizontalLayoutWidget.setGeometry(QRect(620, 10, 481, 241))
         self.horizontalLayout = QHBoxLayout(self.horizontalLayoutWidget)
         self.horizontalLayout.setObjectName(u"horizontalLayout")
         self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
-        self.graphicsView = QGraphicsView(self.horizontalLayoutWidget)
-        self.graphicsView.setObjectName(u"graphicsView")
+        self.ted_widget = MplWidget(self.horizontalLayoutWidget)
+        self.ted_widget.setObjectName(u"ted_widget")
 
-        self.horizontalLayout.addWidget(self.graphicsView)
+        self.horizontalLayout.addWidget(self.ted_widget)
 
         self.gridLayoutWidget = QWidget(self.centralwidget)
         self.gridLayoutWidget.setObjectName(u"gridLayoutWidget")
-        self.gridLayoutWidget.setGeometry(QRect(660, 210, 421, 191))
+        self.gridLayoutWidget.setGeometry(QRect(680, 300, 421, 141))
         self.gridLayout = QGridLayout(self.gridLayoutWidget)
         self.gridLayout.setObjectName(u"gridLayout")
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
@@ -146,32 +148,34 @@ class Ui_MainWindow(object):
 
         self.horizontalLayoutWidget_2 = QWidget(self.centralwidget)
         self.horizontalLayoutWidget_2.setObjectName(u"horizontalLayoutWidget_2")
-        self.horizontalLayoutWidget_2.setGeometry(QRect(660, 410, 421, 41))
+        self.horizontalLayoutWidget_2.setGeometry(QRect(680, 450, 421, 41))
         self.horizontalLayout_2 = QHBoxLayout(self.horizontalLayoutWidget_2)
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
         self.horizontalLayout_2.setContentsMargins(0, 0, 0, 0)
         self.label_5 = QLabel(self.horizontalLayoutWidget_2)
         self.label_5.setObjectName(u"label_5")
+        font1 = QFont()
+        font1.setPointSize(15)
+        self.label_5.setFont(font1)
         self.label_5.setAlignment(Qt.AlignCenter)
 
         self.horizontalLayout_2.addWidget(self.label_5)
 
         self.label_4 = QLabel(self.horizontalLayoutWidget_2)
         self.label_4.setObjectName(u"label_4")
+        self.label_4.setFont(font1)
         self.label_4.setAlignment(Qt.AlignCenter)
 
         self.horizontalLayout_2.addWidget(self.label_4)
 
         self.horizontalLayoutWidget_3 = QWidget(self.centralwidget)
         self.horizontalLayoutWidget_3.setObjectName(u"horizontalLayoutWidget_3")
-        self.horizontalLayoutWidget_3.setGeometry(QRect(660, 460, 421, 81))
+        self.horizontalLayoutWidget_3.setGeometry(QRect(680, 490, 421, 51))
         self.horizontalLayout_3 = QHBoxLayout(self.horizontalLayoutWidget_3)
         self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
         self.horizontalLayout_3.setContentsMargins(0, 0, 0, 0)
         self.lbl_freq_analysis = QLabel(self.horizontalLayoutWidget_3)
         self.lbl_freq_analysis.setObjectName(u"lbl_freq_analysis")
-        font1 = QFont()
-        font1.setPointSize(15)
         self.lbl_freq_analysis.setFont(font1)
         self.lbl_freq_analysis.setAlignment(Qt.AlignCenter)
 
@@ -186,7 +190,7 @@ class Ui_MainWindow(object):
 
         self.horizontalLayoutWidget_4 = QWidget(self.centralwidget)
         self.horizontalLayoutWidget_4.setObjectName(u"horizontalLayoutWidget_4")
-        self.horizontalLayoutWidget_4.setGeometry(QRect(660, 560, 421, 91))
+        self.horizontalLayoutWidget_4.setGeometry(QRect(680, 560, 421, 91))
         self.horizontalLayout_4 = QHBoxLayout(self.horizontalLayoutWidget_4)
         self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
         self.horizontalLayout_4.setContentsMargins(0, 0, 0, 0)
