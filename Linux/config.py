@@ -175,6 +175,24 @@ class Configuration:
         return self.data['AI_analysis'].get('MSE_score', 0.047)
 
     @property
+    def zero_KDE_score(self) -> float:
+        return self.data['AI_analysis'].get('zero_KDE_score', 9000)
+
+    @property
+    def zero_MSE_score(self) -> float:
+        return self.data['AI_analysis'].get('zero_MSE_score', 0.167)
+
+    @property
+    def forty_KDE_score(self) -> float:
+        return self.data['AI_analysis'].get('forty_KDE_score', 8000)
+
+    @property
+    def forty_MSE_score(self) -> float:
+        return self.data['AI_analysis'].get('forty_MSE_score', 0.197)
+
+
+
+    @property
     def port(self) -> int:
         return self.data['server']['port']
 
@@ -257,6 +275,10 @@ class Configuration:
         self.data['AI_analysis'] = {}
         self.data['AI_analysis']['KDE_score'] = 8000
         self.data['AI_analysis']['MSE_score'] = 0.047
+        self.data['AI_analysis']['zero_KDE_score'] = 9000
+        self.data['AI_analysis']['zero_MSE_score'] = 0.167
+        self.data['AI_analysis']['forty_KDE_score'] = 8000
+        self.data['AI_analysis']['forty_MSE_score'] = 0.197
         # server settings
         self.data['server'] = {}
         self.data['server']['port'] = 7000

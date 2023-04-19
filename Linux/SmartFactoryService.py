@@ -783,12 +783,19 @@ class SmartFactoryService:
             self.queue.put(result)
 
     @staticmethod
-    def __get_ai_score1(kde):
-        return kde
+    def __map_score_value(x, forty=8000.0, good=9000.0):
+        ratio = (good - forty) / 40
+        if x > good:
+            rvalue = 0
+        else:
+            rvalue = int( (good - x) / ratio)
+        return rvalue
 
-    @staticmethod
-    def __get_ai_score2(mse):
-        return mse
+    def __get_ai_score1(self, kde):
+        return self.__map_score_value(kde, CONFIG.forty_KDE_score, CONFIG.zero_KDE_score)
+
+    def __get_ai_score2(self, mse):
+        return self.__map_score_value(mse, CONFIG.forty_MSE_score, CONFIG.zero_MSE_score)
 
     @staticmethod
     def __get_freq_analysis():
