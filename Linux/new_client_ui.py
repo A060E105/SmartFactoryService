@@ -3,7 +3,7 @@ import threading
 import numpy as np
 import pandas as pd
 from PySide6.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox
-from PySide6.QtCore import QObject, Signal
+from PySide6.QtCore import QObject, Signal, QTimer
 from PySide6.QtGui import QAction, QIcon
 from ui_mainwindow import Ui_MainWindow
 
@@ -15,75 +15,63 @@ import matplotlib.pyplot as plt
 # class TEDLayout:
 #     def setDefault:
 
-from mplwidget import MplWidget
-
-class TEDClientAgent(QObject):
-
-    statusTxtChanged = Signal(str, str)
-    statusColorChanged = Signal(str, str)
-
-    def __init__(self):
-        super().__init__()
-
-    def doCreateCSV(self):
-        print("agent create csv")
-        self.statusTxtChanged.emit("server_status", 'Hello World!!!')
-        self.statusTxtChanged.emit("dB", '30.5')
-        self.statusTxtChanged.emit("KDE", '40.5')
-        self.statusTxtChanged.emit("MSE", '50.5')
-
-    def run(self):
-        print('press run.')
-
 
 class MainWindow(QMainWindow):
 
     def __init__(self, agent: UIController):
         self.agent = agent
         self.__result_df = pd.DataFrame()
+        self.__timer_count = 0
 
         super(MainWindow, self).__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+        self.setWindowTitle('智慧工廠用戶端')
+        # set connect
         agent.change_text.connect(self.on_text_changed)
         agent.change_style.connect(self.on_style_changed)
+        agent.show_error_msg.connect(self.show_error_msg)
         agent.clear_result.connect(self.clear_result_info)
         agent.table_updated.connect(self.updated_table)
         self.ui.btn_predict.clicked.connect(self.do_predict)
         self.ui.actionrestart_server.triggered.connect(agent.restart_server)
 
         # initialized
+        self.agent.updated_table()
+        self.clear_result_info()
         self.ui.lbl_predict_status.setText('等待按下測試按鈕')
         threading.Thread(target=self.agent.check_server_start).start()
+
         # table initialized
-        self.clear_result_info()
         self.ui.tbl_result.setColumnCount(5)
         self.ui.tbl_result.setHorizontalHeaderLabels(['filename', 'result', 'KDE', 'MSE', 'datetime'])
 
-        # sc = MplWidget(self, width=5, height=4, dpi=100)
-        # sc.axes.plot([0, 1, 2, 3, 4], [10, 1, 20, 3, 40])
-        # self.setCentralWidget(sc)
+        # set timer
+        self.update_table_timer = QTimer()
+        self.update_table_timer.timeout.connect(self.on_timer_method)
+        # self.update_table_timer.timeout.connect(self.agent.updated_table)
+        self.update_table_timer.start(1000)
+        # self.server_recording_time = QTimer()
+        # self.server_recording_time.timeout.connect(self.agent.check_server_recording)
+        # self.server_recording_time.start(3000)
 
+        # TEST(): plot
         self.update_fig()
 
-        # self.ui.ted_widget.canvas.axes.set_title('aaaaa')
+    def on_timer_method(self):
+        if self.__timer_count % 3 == 0:
+            threading.Thread(target=self.agent.check_server_recording).start()
+        self.agent.updated_table()
+        self.__timer_count = (self.__timer_count + 1) % 1000
 
-        # QMessageBox.critical(None, 'Error', 'error')
     def update_fig(self):
-
-        df = pd.read_csv("ted_2.csv")
+        df = pd.read_csv("freq_ana.csv")
         # df2 = pd.read_csv("ted_max.csv")
-        df.columns = ['freq', 'db']
-        # df2.columns = ['freq', 'db']
-        # df.plot(x='freq',y='db')
-        # fig, ax = plt.subplots()
-        # self.ui.ted_widget.axes.semilogx(df.freq, df.db, 'b')
+        self.ui.ted_widget.axes.clear()
         ax = self.ui.ted_widget.axes
 
         ax.semilogx(df.freq, df.db, 'b')
         # ax.semilogx(df2.freq, df2.db, 'r')
-
-        # self.ui.ted_widget.canvas.draw()
         ax.grid(which='major')
         ax.grid(which='minor', linestyle=':')
         ax.set_xlabel(r'Frequency [Hz]')
@@ -91,13 +79,19 @@ class MainWindow(QMainWindow):
         plt.xlim(11, 25000)
         ax.set_xticks([16, 31.5, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000])
         ax.set_xticklabels(['16', '31.5', '63', '125', '250', '500', '1k', '2k', '4k', '8k', '16k'])
-        plt.show()
-        # self.ui.ted_widget.canvas.axes.set_title('aaaaa')
+        # plt.show()
 
+    @staticmethod
+    def show_error_msg(title, text):
+        QMessageBox.critical(None, title, text)
 
     def updated_table(self, df: pd.DataFrame):
+        if self.__result_df.shape[0] == df.shape[0]:
+            return
+
         self.__result_df = df
         self.ui.tbl_result.clear()
+        self.on_text_changed('predict_status', '等待按下測試按鈕t ')
         row_count, col_count = df.shape
         self.ui.tbl_result.setRowCount(row_count)
         self.ui.tbl_result.setColumnCount(col_count)
@@ -144,7 +138,6 @@ class MainWindow(QMainWindow):
 
         if mapping.__contains__(label_name):
             mapping.get(label_name).setText(text)
-            print(label_name, '=', text)
 
     def on_style_changed(self, label_name: str, style: str) -> None:
         mapping = {'server_status': self.ui.lbl_server_status,
@@ -158,8 +151,6 @@ class MainWindow(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    # agent = TEDClientAgent()
-    # window = MainWindow(agent)
     ui_ctrl = UIController()
     window = MainWindow(ui_ctrl)
     window.show()

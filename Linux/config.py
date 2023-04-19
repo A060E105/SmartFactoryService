@@ -190,8 +190,6 @@ class Configuration:
     def forty_MSE_score(self) -> float:
         return self.data['AI_analysis'].get('forty_MSE_score', 0.197)
 
-
-
     @property
     def port(self) -> int:
         return self.data['server']['port']

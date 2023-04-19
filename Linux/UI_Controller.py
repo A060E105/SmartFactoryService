@@ -25,24 +25,26 @@ STATUS_MSG = CONFIG.status_message
 class UIController(QObject):
     change_text = Signal(str, str)
     change_style = Signal(str, str)
+    show_error_msg = Signal(str, str)
     table_updated = Signal(pd.DataFrame)
     clear_result = Signal()
 
     def __init__(self):
         super().__init__()
-        virtual_io = VirtualIO()
-        virtual_io.set_callback(self.start_analysis)
-        self.io_ctrl = IOCtrl(virtual_io)
+        # virtual_io = VirtualIO()
+        # virtual_io.set_callback(self.start_analysis)
+        # self.io_ctrl = IOCtrl(virtual_io)
         self.session = create_session()
 
     def __del__(self):
-        self.io_ctrl.cleanup()
+        # self.io_ctrl.cleanup()
+        pass
 
     def calibration(self):
         pass
 
     def start_analysis(self, event=None):
-        self.io_ctrl.disable()
+        # self.io_ctrl.disable()
         self.__clear_result()
         filename = f"{int(time.time())}_{CONFIG.device_name}"
         self.__set_status(STATUS_MSG['recording'])
@@ -54,19 +56,16 @@ class UIController(QObject):
                 raise Exception
 
             # updated table
-            self.__updated_table()
+            self.updated_table()
 
             # TODO(): record to the CSV
 
         except Exception as e:
-            # TODO(): show error message
             self.__show_error(response.get('status'))
-            # threading.Thread(target=self.__show_error, args=(response.get('status'), )).start()
-            print(e)
             threading.Thread(target=self.check_server_start, args=(True,)).start()
         finally:
             self.__set_status(STATUS_MSG['wait_for_press'])
-            self.io_ctrl.enable()
+            # self.io_ctrl.enable()
 
     def restart_server(self):
         execute_path = os.path.join(os.path.expanduser('~'), '.conda', 'envs', 'SmartFactory', 'pythonw.exe')
@@ -90,7 +89,14 @@ class UIController(QObject):
         self.__set_server_status('fail')
         # TODO(): server status show fail message
 
-    def __updated_table(self):
+    def check_server_recording(self) -> None:
+        response = self.__send_socket(action='check_recording', filename='check')
+        print(response)
+        if response.get('status') == 5:
+            self.__clear_result()
+            self.__set_status(STATUS_MSG['recording'])
+
+    def updated_table(self):
         df = pd.read_sql_query(self.session.query(AIResult).statement, self.session.bind)
         df = df[['file_name', 'decibel', 'ai_score1', 'ai_score2', 'freq_result', 'ai_result', 'final_result',
                  'created_at']]
@@ -107,6 +113,7 @@ class UIController(QObject):
         }
         error_code = f"Error code[{code}]"
         error_msg = parser_error_code.get(code) + error_code
+        self.show_error_msg.emit('Error', error_msg)
         # threading.Thread(target=QMessageBox.critical, args=(None, 'Error', error_msg)).start()
 
     def __set_server_status(self, status, count=None):
@@ -128,7 +135,6 @@ class UIController(QObject):
         清除結果文字
         """
         self.clear_result.emit()
-        # self.__set_view_text('result', '')
 
     def __set_status(self, text):
         self.__set_view_text('predict_status', text)
@@ -157,7 +163,7 @@ class UIController(QObject):
                         client.send(request.encode())
 
                         read_data = json.loads(client.recv(4096).decode('utf-8'))
-                        print('response: ', read_data)
+                        # print('response: ', read_data)
                         return read_data
                     except Exception:
                         pass

@@ -522,7 +522,8 @@ class Specgram:
                        interpolation='None', vmin=CONFIG.vmin, vmax=CONFIG.vmax)
             plt.axis('off') 
             fig = plt.gcf()
-            plt.yscale('symlog', linthreshy=200)
+            plt.yscale('symlog', linthresh=200)
+            # plt.yscale('symlog', linthreshy=200)
             fig.set_size_inches(  im_width , im_height  ) #dpi = 300, output = 700*700 pixels
             plt.gca().xaxis.set_major_locator(plt.NullLocator())
             plt.gca().yaxis.set_major_locator(plt.NullLocator())
@@ -783,19 +784,30 @@ class SmartFactoryService:
             self.queue.put(result)
 
     @staticmethod
-    def __map_score_value(x, forty=8000.0, good=9000.0):
+    def __map_score_value(x, forty=8000.0, good=9000.0, isKDE=1):
         ratio = (good - forty) / 40
         if x > good:
             rvalue = 0
         else:
-            rvalue = int( (good - x) / ratio)
+            rvalue = int((good - x) / ratio)
+
+        return 100 if rvalue > 100 else rvalue
+
+    @staticmethod
+    def __map_value_MSE(x, forty, good):
+        rvalue = ((x - good) / (forty - good)) * 40
+
+        rvalue = 100 if rvalue > 100 else rvalue
+        rvalue = 0 if rvalue < 0 else rvalue
         return rvalue
 
     def __get_ai_score1(self, kde):
-        return self.__map_score_value(kde, CONFIG.forty_KDE_score, CONFIG.zero_KDE_score)
+        # print(f"kde={kde} zero={CONFIG.zero_KDE_score} forty={CONFIG.forty_KDE_score}")
+        return self.__map_value_MSE(kde, CONFIG.forty_KDE_score, CONFIG.zero_KDE_score)
 
     def __get_ai_score2(self, mse):
-        return self.__map_score_value(mse, CONFIG.forty_MSE_score, CONFIG.zero_MSE_score)
+        # print(f"mse={mse} zero={CONFIG.zero_MSE_score} forty={CONFIG.forty_MSE_score}")
+        return self.__map_value_MSE(mse, CONFIG.forty_MSE_score, CONFIG.zero_MSE_score)
 
     @staticmethod
     def __get_freq_analysis():
@@ -870,7 +882,8 @@ class SmartFactoryService:
         result = dict(self.Result(status=0, model=[], result=['Save Success'])._asdict())
         self.queue.put(result)
 
-    def rm_init_file(self) -> None:
+    @staticmethod
+    def rm_init_file() -> None:
         boot_init_filename = 'boot_init'
         source_file = SOURCE_PATH + boot_init_filename + '.wav'
         audio_path = os.path.join(AUDIO_OUT_PATH, boot_init_filename)

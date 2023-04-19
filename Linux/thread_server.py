@@ -31,7 +31,7 @@ CONFIG = Configuration()
 
 microphones = {'1': Audio.DEVICE_1, '2': Audio.DEVICE_2, 'default': Audio.DEVICE_DEFAULT, 'test': 'test'}
 
-action_list = ["all", 'rec_only', 'spec_only', 'spec_ai', 'get_cali', 'set_cali', 'check']
+action_list = ["all", 'rec_only', 'spec_only', 'spec_ai', 'get_cali', 'set_cali', 'check', 'check_recording']
 
 microphones_status = {}
 
@@ -106,6 +106,14 @@ class ClientThread(threading.Thread):
 
             if action == 'check':       # check server has start
                 self.csocket.send((json.dumps({'status': 'OK'}) + '\r\n').encode())
+                break
+
+            if action == 'check_recording':
+                if microphones_status[device_name].isLock:
+                    self.csocket.send((json.dumps({'status': 5, 'result': ['this device on using.']}) + '\r\n')
+                                      .encode())
+                else:
+                    self.csocket.send((json.dumps({'status': 'OK'}) + '\r\n').encode())
                 break
 
             if not filename:        # check filename is empty
