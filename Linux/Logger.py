@@ -5,7 +5,7 @@ from logging.handlers import RotatingFileHandler
 import sty
 
 log = logging.getLogger('dev')
-log.setLevel(logging.INFO)
+log.setLevel(logging.WARN)
 
 date_format = '%Y-%m-%d %H:%M:%S'
 

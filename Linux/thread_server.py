@@ -9,14 +9,13 @@ import subprocess
 import sounddevice as sd
 from datetime import datetime
 from multiprocessing import Queue
-from SmartFactoryService import Audio
+from Audio import Audio
 
 import SmartFactoryService as SFS
 from config import Configuration
 from Logger import get_logger
 from database import create_session, AIResult, create_table
 
-import win32api
 
 expire = datetime(2024, 2, 1)   # 過期時間
 
@@ -204,9 +203,9 @@ def boot_init() -> None:
 
 
 set_input_volume_max()      # set microphone input volume max
-boot_init()     # boot initiation
-
 create_table()  # sqlite initialize
+
+boot_init()     # boot initiation
 
 LOCALHOST = ""
 PORT = CONFIG.port

@@ -15,6 +15,6 @@ audio/
 backup/
 build/
 dist/
-*.log
+*.log*
 *.cmd
 *.exe
