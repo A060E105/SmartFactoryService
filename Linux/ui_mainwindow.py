@@ -23,28 +23,29 @@ from PySide6.QtWidgets import (QApplication, QGridLayout, QHBoxLayout, QHeaderVi
 
 from mplwidget import MplWidget
 
-
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(1223, 708)
+        MainWindow.resize(1223, 842)
         self.actioncreate_csv = QAction(MainWindow)
         self.actioncreate_csv.setObjectName(u"actioncreate_csv")
         self.actionrestart_server = QAction(MainWindow)
         self.actionrestart_server.setObjectName(u"actionrestart_server")
+        self.actionmic_cali = QAction(MainWindow)
+        self.actionmic_cali.setObjectName(u"actionmic_cali")
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.tbl_result = QTableWidget(self.centralwidget)
         self.tbl_result.setObjectName(u"tbl_result")
-        self.tbl_result.setGeometry(QRect(30, 320, 611, 331))
+        self.tbl_result.setGeometry(QRect(20, 410, 741, 381))
         self.btn_predict = QPushButton(self.centralwidget)
         self.btn_predict.setObjectName(u"btn_predict")
         self.btn_predict.setGeometry(QRect(30, 240, 171, 61))
         self.btn_predict.setAutoFillBackground(False)
         self.horizontalLayoutWidget = QWidget(self.centralwidget)
         self.horizontalLayoutWidget.setObjectName(u"horizontalLayoutWidget")
-        self.horizontalLayoutWidget.setGeometry(QRect(620, 10, 481, 241))
+        self.horizontalLayoutWidget.setGeometry(QRect(620, 10, 591, 381))
         self.horizontalLayout = QHBoxLayout(self.horizontalLayoutWidget)
         self.horizontalLayout.setObjectName(u"horizontalLayout")
         self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
@@ -55,7 +56,7 @@ class Ui_MainWindow(object):
 
         self.gridLayoutWidget = QWidget(self.centralwidget)
         self.gridLayoutWidget.setObjectName(u"gridLayoutWidget")
-        self.gridLayoutWidget.setGeometry(QRect(680, 300, 421, 141))
+        self.gridLayoutWidget.setGeometry(QRect(790, 440, 421, 141))
         self.gridLayout = QGridLayout(self.gridLayoutWidget)
         self.gridLayout.setObjectName(u"gridLayout")
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
@@ -149,7 +150,7 @@ class Ui_MainWindow(object):
 
         self.horizontalLayoutWidget_2 = QWidget(self.centralwidget)
         self.horizontalLayoutWidget_2.setObjectName(u"horizontalLayoutWidget_2")
-        self.horizontalLayoutWidget_2.setGeometry(QRect(680, 450, 421, 41))
+        self.horizontalLayoutWidget_2.setGeometry(QRect(790, 590, 421, 41))
         self.horizontalLayout_2 = QHBoxLayout(self.horizontalLayoutWidget_2)
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
         self.horizontalLayout_2.setContentsMargins(0, 0, 0, 0)
@@ -171,7 +172,7 @@ class Ui_MainWindow(object):
 
         self.horizontalLayoutWidget_3 = QWidget(self.centralwidget)
         self.horizontalLayoutWidget_3.setObjectName(u"horizontalLayoutWidget_3")
-        self.horizontalLayoutWidget_3.setGeometry(QRect(680, 490, 421, 51))
+        self.horizontalLayoutWidget_3.setGeometry(QRect(790, 630, 421, 51))
         self.horizontalLayout_3 = QHBoxLayout(self.horizontalLayoutWidget_3)
         self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
         self.horizontalLayout_3.setContentsMargins(0, 0, 0, 0)
@@ -191,7 +192,7 @@ class Ui_MainWindow(object):
 
         self.horizontalLayoutWidget_4 = QWidget(self.centralwidget)
         self.horizontalLayoutWidget_4.setObjectName(u"horizontalLayoutWidget_4")
-        self.horizontalLayoutWidget_4.setGeometry(QRect(680, 560, 421, 91))
+        self.horizontalLayoutWidget_4.setGeometry(QRect(790, 700, 421, 91))
         self.horizontalLayout_4 = QHBoxLayout(self.horizontalLayoutWidget_4)
         self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
         self.horizontalLayout_4.setContentsMargins(0, 0, 0, 0)
@@ -221,6 +222,7 @@ class Ui_MainWindow(object):
         self.menubar.addAction(self.menuOption.menuAction())
         self.menuFile.addAction(self.actioncreate_csv)
         self.menuOption.addAction(self.actionrestart_server)
+        self.menuOption.addAction(self.actionmic_cali)
 
         self.retranslateUi(MainWindow)
 
@@ -231,6 +233,7 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"MainWindow", None))
         self.actioncreate_csv.setText(QCoreApplication.translate("MainWindow", u"create csv", None))
         self.actionrestart_server.setText(QCoreApplication.translate("MainWindow", u"restart server", None))
+        self.actionmic_cali.setText(QCoreApplication.translate("MainWindow", u"mic cali", None))
         self.btn_predict.setText(QCoreApplication.translate("MainWindow", u"Run Test", None))
         self.label_3.setText(QCoreApplication.translate("MainWindow", u"AI Score2", None))
         self.label_2.setText(QCoreApplication.translate("MainWindow", u"AI Score1", None))
