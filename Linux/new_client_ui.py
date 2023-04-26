@@ -41,7 +41,7 @@ class MainWindow(QMainWindow):
         self.ui.actionrestart_server.triggered.connect(agent.restart_server)
         self.ui.actionmic_cali.triggered.connect(self.calibration)
         self.ui.actioncreate_csv.triggered.connect(self.agent.export_to_csv)
-        self.ui.actionclear_all_data.triggered.connect(self.clear_database)
+        self.ui.actionclear_all_data.triggered.connect(self.agent.clear_database)
 
         # initialized
         # ted temp mark
