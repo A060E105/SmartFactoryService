@@ -11,6 +11,7 @@ from UI_Controller import UIController
 import matplotlib.pyplot as plt
 import os
 
+
 # http://c.biancheng.net/view/1863.html
 # Qt QTableWidget 基本操作
 # class TEDLayout:
@@ -38,6 +39,7 @@ class MainWindow(QMainWindow):
 
         # set button connect
         self.ui.btn_predict.clicked.connect(self.do_predict)
+        self.ui.btn_play.clicked.connect(self.do_play_audio)
         self.ui.actionrestart_server.triggered.connect(agent.restart_server)
         self.ui.actionmic_cali.triggered.connect(self.calibration)
         self.ui.actioncreate_csv.triggered.connect(self.agent.export_to_csv)
@@ -156,6 +158,13 @@ class MainWindow(QMainWindow):
 
     def do_predict(self):
         threading.Thread(target=self.agent.start_analysis).start()
+
+    def do_play_audio(self):
+        print('play audio')
+        # TODO: need to set flag avoid user push too fast
+        self.ui.btn_play.setEnabled(False)
+        print('play audio finished!!')
+        self.ui.btn_play.setEnabled(True)
 
     def on_text_changed(self, label_name: str, text: str) -> None:
         mapping = {'server_status': self.ui.lbl_server_status,
