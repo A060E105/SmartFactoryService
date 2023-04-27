@@ -8,7 +8,6 @@ import re
 import os
 import shutil
 from ftplib import FTP
-# from tensorflow.python.framework.ops import device
 import time
 import tqdm
 import wave
@@ -39,6 +38,7 @@ from threading import Thread, Lock
 from multiprocessing import Process, Queue
 from collections import namedtuple
 # configuration
+from Audio import Audio
 from config import Configuration
 from storage import storage as STORAGE
 
@@ -61,6 +61,7 @@ log = get_logger()
 SOURCE_PATH = './source/'
 AUDIO_OUT_PATH = './audio/'
 SPEC_PATH = './spec/'
+FREQ_CSV_PATH = './freq_csv/'
 
 gpus = tf.config.list_physical_devices('GPU')
 if gpus:
@@ -74,8 +75,6 @@ if gpus:
 
 MODEL = load_model('./' + CONFIG.model_name)
 ENCODER_MODEL = load_model('./' + CONFIG.encoder_model_name)
-# MODEL = load_model('./new_model.h5')
-# ENCODER_MODEL = load_model('./encoder_model.h5')
 
 
 # =======================================================
@@ -105,7 +104,6 @@ def wav_to_mp3(action=None, filename=None) -> None:
     for name in tqdm.tqdm(wav_files):
         file = name.split('/')[-1]
         filename = file.split('.')[0]
-        # sound = AudioSegment.from_mp3(name)
         sound = AudioSegment.from_wav(name)
         sound.export(SOURCE_PATH + filename + '.mp3', format='mp3')
 
@@ -118,16 +116,16 @@ def mp3_to_wav(filename=None) -> None:
     y, sr = soundfile.read(target_path)
     soundfile.write(target_path, y, sr, 'PCM_16')
 
-# ted_added
+
 def wav_to_csv(filename=None) -> None:
+    my_mkdir(FREQ_CSV_PATH)
     fraction = 12
-    limits = [20, 16000]
+    limits = [100, 5000]
     source_path = f"{SOURCE_PATH}{filename}.wav"
     y, fs = soundfile.read(source_path)
     spectrum, freq_bands = PyOctaveBand.octavefilter(y, fs, fraction=fraction, limits=limits)
-    s1 = pd.Series(spectrum, index=freq_bands)
-    s1.columns = ['freq', 'db']
-    s1.to_csv(f"one_file.csv")
+    df = pd.DataFrame({'freq': freq_bands, 'db': spectrum})
+    df.to_csv(os.path.join(FREQ_CSV_PATH, f"{filename}.csv"))
 
 
 def rm_file(path='', filename=None) -> None:
@@ -239,183 +237,6 @@ def parser_result(results: list) -> str:
 
 
 # =============================================================================
-#   Audio class
-# =============================================================================
-class Audio:
-
-    DEVICE_DEFAULT = CONFIG.mic_default_name
-    DEVICE_1 = CONFIG.mic_1_name
-    DEVICE_2 = CONFIG.mic_2_name
-
-    DEFAULT_CALI = CONFIG.mic_default_cali
-    MIC_1_CALI = CONFIG.mic_1_cali
-    MIC_2_CALI = CONFIG.mic_2_cali
-
-    DEFAULT = 'mic_default'
-    MIC_1 = 'mic_1'
-    MIC_2 = 'mic_2'
-
-    framerate = CONFIG.framerate
-    samples = CONFIG.samples
-    sampwidth = CONFIG.sampwidth
-    channels = CONFIG.channels
-
-    def __init__(self, filename, device='', second=CONFIG.second, config=DEFAULT) -> None:
-        self.filename = filename
-        self.record_data = b''
-        self.device = device
-        self.second = second + 0.5
-        self.source_record_data = None
-        self.config_name = config
-
-    def record(self) -> None:
-        if self.hasDevice():
-            try:
-                pa = PyAudio()
-                stream = pa.open(format=paInt16,
-                    channels=self.channels,
-                    rate=self.framerate,
-                    input=True,
-                    input_device_index=self.__getDevice(self.device),
-                    frames_per_buffer=self.samples)
-                my_buf = []
-                for _ in tqdm.trange(int(self.framerate / self.samples * self.second), desc=f"record {self.filename}.wav"):
-                    string_audio_data = stream.read(self.samples, exception_on_overflow=False)
-                    my_buf.append(string_audio_data)
-                stream.stop_stream()
-                stream.close()
-                pa.terminate()
-                self.record_data = np.array(my_buf).tobytes()
-                self.source_record_data = np.array(my_buf).tobytes()
-            except:
-                pass
-
-    def save_wav(self) -> None:
-        my_mkdir(SOURCE_PATH)
-        wf = wave.open(f"{SOURCE_PATH}{self.filename}.wav", 'wb')
-        wf.setnchannels(self.channels)
-        wf.setsampwidth(self.sampwidth)
-        wf.setframerate(self.framerate)
-        wf.writeframes(self.record_data)
-        wf.close()
-
-    def A_weighting(self) -> None:
-        f1 = 20.598997
-        f2 = 107.65265
-        f3 = 737.86223
-        f4 = 12194.217
-        A1000 = 1.9997
-    
-        NUMs = [(2*pi * f4)**2 * (10**(A1000/20)), 0, 0, 0, 0]
-        DENs = polymul([1, 4*pi * f4, (2*pi * f4)**2],
-                       [1, 4*pi * f1, (2*pi * f1)**2])
-        DENs = polymul(polymul(DENs, [1, 2*pi * f3]),
-                                     [1, 2*pi * f2])
-    
-        # Use the bilinear transformation to get the digital filter.
-        # (Octave, MATLAB, and PyLab disagree about Fs vs 1/Fs)
-        b, a = bilinear(NUMs, DENs, self.framerate)
-    
-        data = np.frombuffer(self.record_data, dtype=np.short)
-        AW = lfilter(b, a, data)
-
-        CONFIG.read()
-        cali = CONFIG.get_cali(self.config_name)
-        AWcali = AW * float(cali)
-
-        self.record_data = AWcali.astype(np.short).tobytes()
-
-    def __A_weighting(self, fs):
-        f1 = 20.598997
-        f2 = 107.65265
-        f3 = 737.86223
-        f4 = 12194.217
-        A1000 = 1.9997
-
-        NUMs = [(2 * pi * f4) ** 2 * (10 ** (A1000 / 20)), 0, 0, 0, 0]
-        DENs = polymul([1, 4 * pi * f4, (2 * pi * f4) ** 2],
-                       [1, 4 * pi * f1, (2 * pi * f1) ** 2])
-        DENs = polymul(polymul(DENs, [1, 2 * pi * f3]),
-                       [1, 2 * pi * f2])
-
-        # Use the bilinear transformation to get the digital filter.
-        # (Octave, MATLAB, and PyLab disagree about Fs vs 1/Fs)
-        return bilinear(NUMs, DENs, fs)
-
-    def __calibration(self) -> None:
-        ref = 0.00002
-        source_data = np.frombuffer(self.source_record_data, dtype=np.short)
-        AW = np.frombuffer(self.record_data, dtype=np.short)
-        cali = np.sqrt(np.mean(np.absolute(source_data)**2))
-        log.debug(f'cali: {cali}')
-        db = 20*np.log10(np.sqrt(np.mean(np.absolute(self.source_record_data)**2))/(ref*cali))
-        log.debug(f'db: {db}')
-        AWcali = AW / cali
-        self.record_data = AWcali.astype(np.short).tobytes()
-
-    def get_calibration(self) -> float:
-        """
-        get calibration value
-        """
-        # source_data = np.frombuffer(self.record_data, dtype=np.short)
-        # source_data = source_data / 32768
-        # source_data = source_data / 16384
-        ref = 0.00002
-        cali_path = os.path.join(SOURCE_PATH, 'cali.wav')
-        source_data, fs = soundfile.read(cali_path)
-        b, a = self.__A_weighting(fs)
-        AW_data = lfilter(b, a, source_data)
-        cali = 0.1 / (np.sqrt(np.mean(np.absolute(AW_data)**2)))
-        # 202302116 , 0.2 -> 0.1  for 80dB ->74dB
-        log.debug(f'cali: {cali}')
-        db = 20*np.log10(np.sqrt(np.mean(np.absolute(AW_data)**2))/(ref*cali))
-        log.debug(f'db: {db}')
-        # CONFIG.set_cali(self.config_name, cali)
-        return cali
-
-    def getDeviceName(self) -> list:
-        p = PyAudio()
-        info = p.get_host_api_info_by_index(0)
-        numdevices = info.get('deviceCount')
-        device_name_list = []
-        for i in range(0, numdevices):
-            if (p.get_device_info_by_host_api_device_index(0, i).get('maxInputChannels')) > 0:
-                device_name_list.append(p.get_device_info_by_host_api_device_index(0, i).get('name'))
-
-        return device_name_list
-
-    def __getDevice(self, device_name) -> "int | None":
-        p = PyAudio()
-        info = p.get_host_api_info_by_index(0)
-        numdevices = info.get('deviceCount')
-        # print("numdevices %s" %(numdevices))
-        # print(f'connected devices: {self.getDeviceName()}')
-        # print(f'configuration device name: {CONFIG.mic_default_name}')
-        # print(f'self device name: {self.device}')
-        for i in range(0, numdevices):
-            if (p.get_device_info_by_host_api_device_index(0, i).get('maxInputChannels')) > 0:
-                if re.search(device_name, p.get_device_info_by_host_api_device_index(0, i).get('name')) is not None:
-                    return i
-
-    def hasDevice(self) -> bool:
-        # develop test
-        if self.device == 'test':
-            return True
-
-        if self.__getDevice(self.device) is None:
-            log.warning("has not device")
-            return False
-        else:
-            log.debug("has device")
-            return True
-
-    def get_decibel(self) -> float:
-        y, sr = soundfile.read(f"{SOURCE_PATH}{self.filename}.wav")
-        ref = 0.00002
-        return 20 * np.log10(np.sqrt(np.mean(np.absolute(y) ** 2)) / ref)
-
-
-# =============================================================================
 #       Specgram class
 # =============================================================================
 class Specgram:
@@ -497,7 +318,6 @@ class Specgram:
                         ptr_start = int(ptr_start)
                         time += 1
                         pbar.update(1)
-                        #print('\n' , ptr_start , ptr_end, '\n')
                         yield [sampwidth, framerate, temp_dataTemp], image_list
                     else:
                         break
@@ -515,35 +335,24 @@ class Specgram:
         image_list = []
         for f_split in freq_split_list:
             freq = np.array(freq)
-            mask = (freq >= f_split[0] ) * (freq < f_split[1] ) 
-            index_list = [ index for index,x in enumerate(mask) if x]  
-            sshow = sshow_origin[ : , index_list]
+            mask = (freq >= f_split[0]) * (freq < f_split[1])
+            index_list = [index for index, x in enumerate(mask) if x]
+            sshow = sshow_origin[:, index_list]
             
-            # ims = 20.*np.log10(np.abs(sshow)/10e-6) # amplitude to decibel
-            ims = 20. * np.log10(np.abs(sshow) / 10e+6)  #dBFS
-            # ims = 20.*np.log10(np.abs(sshow)/10e-3)
-            # ims = 20.*np.log10(np.abs(sshow)/32768)
-            # ims = 20*np.log10(np.abs(sshow)/32768)
-            # ims = np.abs(sshow) 
-
-            # timebins, freqbins = np.shape(ims)
-            #print("timebins: ", timebins)
-            #print("freqbins: ", freqbins)
-            # plt.imshow(np.transpose(ims), origin="None", aspect="auto", cmap="jet", extent = None, interpolation='None', vmin= -160, vmax= 0)
+            ims = 20. * np.log10(np.abs(sshow) / 10e+6)  # dBFS
             plt.imshow(np.transpose(ims), origin="lower", aspect="auto", cmap="jet", extent=None,
                        interpolation='None', vmin=CONFIG.vmin, vmax=CONFIG.vmax)
             plt.axis('off') 
             fig = plt.gcf()
             plt.yscale('symlog', linthresh=200)
-            # plt.yscale('symlog', linthreshy=200)
-            fig.set_size_inches(  im_width , im_height  ) #dpi = 300, output = 700*700 pixels
+            fig.set_size_inches(im_width, im_height)  # dpi = 300, output = 700*700 pixels
             plt.gca().xaxis.set_major_locator(plt.NullLocator())
             plt.gca().yaxis.set_major_locator(plt.NullLocator())
-            plt.subplots_adjust(top = 1, bottom = 0, right = 1, left = 0, hspace = 0, wspace = 0)
-            plt.margins(0,0)
+            plt.subplots_adjust(top=1, bottom=0, right=1, left=0, hspace=0, wspace=0)
+            plt.margins(0, 0)
 
-            img_arr = self.__get_img_from_fig( fig , dpi = 1 )
-            image_list.append( img_arr )
+            img_arr = self.__get_img_from_fig(fig, dpi=1)
+            image_list.append(img_arr)
             plt.clf()
         return np.array(image_list)
 
@@ -558,9 +367,9 @@ class Specgram:
         newspec = np.complex128(np.zeros([timebins, len(scale)]))
         for i in range(0, len(scale)):        
             if i == len(scale)-1:
-                newspec[:,i] = np.sum(spec[:,int(scale[i]):], axis=1)
+                newspec[:, i] = np.sum(spec[:, int(scale[i]):], axis=1)
             else:        
-                newspec[:,i] = np.sum(spec[:,int(scale[i]):int(scale[i+1])], axis=1)
+                newspec[:, i] = np.sum(spec[:, int(scale[i]):int(scale[i+1])], axis=1)
     
         # list center freq of bins
         allfreqs = np.abs(np.fft.fftfreq(freqbins*2, 1./sr)[:freqbins+1])
@@ -582,7 +391,7 @@ class Specgram:
         # zeros at beginning (thus center of 1st window should be for sample nr. 0)   
         samples = np.append(np.zeros(int(np.floor(frameSize/2.0))), sig)    
         # cols for windowing
-        cols = np.ceil( (len(samples) - frameSize) / float(hopSize)) + 1
+        cols = np.ceil((len(samples) - frameSize) / float(hopSize)) + 1
         # zeros at end (thus samples can be fully covered by frames)
         samples = np.append(samples, np.zeros(frameSize))
         
@@ -725,7 +534,7 @@ class SmartFactoryService:
                 self.au.save_wav()
                 wav_to_mp3(filename=self.filename)
                 mp3_to_wav(filename=self.filename)
-                wav_to_csv(filename=self.filename)  # ted added
+                wav_to_csv(filename=self.filename)  # wav to freq csv
                 my_thread = Thread(self.combine_spec_ai(self.filename, gpu_lock=self.gpu_lock, queue=self.queue))
                 my_thread.start()
                 my_thread.join()
@@ -808,23 +617,24 @@ class SmartFactoryService:
 
     @staticmethod
     def __map_value_MSE(x, forty, good):
+        print(f"x={x}, zone={good}, forty={forty}")
         rvalue = ((x - good) / (forty - good)) * 40
-
+        print(f"step1 rvalue={rvalue}")
         rvalue = 100 if rvalue > 100 else rvalue
         rvalue = 0 if rvalue < 0 else rvalue
         return rvalue
 
     def __get_ai_score1(self, kde):
-        # print(f"kde={kde} zero={CONFIG.zero_KDE_score} forty={CONFIG.forty_KDE_score}")
         return self.__map_value_MSE(kde, CONFIG.forty_KDE_score, CONFIG.zero_KDE_score)
 
     def __get_ai_score2(self, mse):
-        # print(f"mse={mse} zero={CONFIG.zero_MSE_score} forty={CONFIG.forty_MSE_score}")
         return self.__map_value_MSE(mse, CONFIG.forty_MSE_score, CONFIG.zero_MSE_score)
 
-    @staticmethod
-    def __get_freq_analysis():
-        return 'OK'
+    def __get_freq_analysis(self):
+        std_df = pd.read_csv('freq_ana.csv')
+        test_df = pd.read_csv(os.path.join(FREQ_CSV_PATH, f"{self.filename}.csv"))
+        result_df = std_df[std_df.db < test_df.db]
+        return 'OK' if result_df.empty else 'NG'
 
     @staticmethod
     def __get_final_result(result1, result2):
@@ -911,13 +721,3 @@ class SmartFactoryService:
             shutil.rmtree(audio_path)
         except OSError:
             pass
-
-
-# if __name__ == '__main__':
-#     filename = 'demo'
-#     model_file = './model.h5'
-#     queue = Queue()
-#     sfs = SmartFactoryService(filename, device=Audio.DEVICE_1, model=model_file, queue=queue)
-#     sfs.run()
-#     print('main', queue.get())
-#

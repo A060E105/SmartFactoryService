@@ -28,37 +28,35 @@ class MainWindow(QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.setWindowTitle('智慧工廠用戶端')
-        # set connect
+        # Set Signal connect
         agent.change_text.connect(self.on_text_changed)
         agent.change_style.connect(self.on_style_changed)
-        agent.show_error_msg.connect(self.show_error_msg)
+        agent.show_msg.connect(self.show_msg)
+        agent.show_question_msg.connect(self.show_question_msg)
         agent.clear_result.connect(self.clear_result_info)
         agent.table_updated.connect(self.updated_table)
+
+        # set button connect
         self.ui.btn_predict.clicked.connect(self.do_predict)
         self.ui.actionrestart_server.triggered.connect(agent.restart_server)
+        self.ui.actionmic_cali.triggered.connect(self.calibration)
+        self.ui.actioncreate_csv.triggered.connect(self.agent.export_to_csv)
+        self.ui.actionclear_all_data.triggered.connect(self.agent.clear_database)
 
         # initialized
         # ted temp mark
-        # self.agent.updated_table()
+        self.agent.updated_table()
         self.clear_result_info()
         self.ui.lbl_predict_status.setText('等待按下測試按鈕')
         threading.Thread(target=self.agent.check_server_start).start()
 
-        # table initialized
-        self.ui.tbl_result.setColumnCount(5)
-        self.ui.tbl_result.setHorizontalHeaderLabels(['filename', 'result', 'KDE', 'MSE', 'datetime'])
-
         # set timer
         self.update_table_timer = QTimer()
         self.update_table_timer.timeout.connect(self.on_timer_method)
-        # self.update_table_timer.timeout.connect(self.agent.updated_table)
-        self.update_table_timer.start(1000)
-        # self.server_recording_time = QTimer()
-        # self.server_recording_time.timeout.connect(self.agent.check_server_recording)
-        # self.server_recording_time.start(3000)
+        self.update_table_timer.start(1500)
 
-        # TEST(): plot
-        self.update_fig()
+    def __del__(self):
+        self.update_table_timer.stop()
 
     def on_timer_method(self):
         if self.__timer_count % 3 == 0:
@@ -66,37 +64,62 @@ class MainWindow(QMainWindow):
         self.agent.updated_table()
         self.__timer_count = (self.__timer_count + 1) % 1000
 
-    def update_fig(self):
-        df = pd.read_csv("freq_ana.csv")
-        self.ui.ted_widget.axes.clear()
+    def calibration(self):
+        threading.Thread(target=self.agent.get_calibration).start()
+
+    def update_fig(self, filename=None):
+        std_path = "freq_ana.csv"
+        if filename is None:
+            current_path = std_path
+        else:
+            current_path = os.path.join('freq_csv', f"{filename}.csv")
+        df = pd.DataFrame(columns=['freq', 'db'])
+        df2 = pd.DataFrame(columns=['freq', 'db'])
+        if os.path.exists(std_path):
+            df = pd.read_csv(std_path)
+        if os.path.exists(current_path):
+            df2 = pd.read_csv(current_path)
+
         ax = self.ui.ted_widget.axes
-        df.columns = ['freq', 'db']
-        ax.semilogx(df.freq, df.db, 'b')
-        # ted_added
-        if os.path.exists("one_file.csv"):
-            df2 = pd.read_csv("ted_max.csv")
-            df2.columns = ['freq', 'db']
-            ax.semilogx(df2.freq, df2.db, 'r')
+        ax.semilogx(df.freq, df.db, 'b', label='std')
+        ax.semilogx(df2.freq, df2.db, 'r', label='test')
         ax.grid(which='major')
         ax.grid(which='minor', linestyle=':')
         ax.set_xlabel(r'Frequency [Hz]')
         ax.set_ylabel('Level [dB]')
         plt.xlim(11, 25000)
-        ax.set_xticks([16, 31.5, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000])
-        ax.set_xticklabels(['16', '31.5', '63', '125', '250', '500', '1k', '2k', '4k', '8k', '16k'])
-        # plt.show()
+        ax.set_xticks([63, 125, 250, 500, 1000, 2000, 4000, 8000])
+        ax.set_xticklabels(['63', '125', '250', '500', '1k', '2k', '4k', '8k'])
+        ax.legend()
+        self.ui.ted_widget.draw()
 
     @staticmethod
-    def show_error_msg(title, text):
-        QMessageBox.critical(None, title, text)
+    def show_msg(msg_type, title, text):
+        mapping = {
+            'info': QMessageBox.information,
+            'critical': QMessageBox.critical,
+        }
+        if mapping.__contains__(msg_type):
+            mapping.get(msg_type)(None, title, text)
+
+    def show_question_msg(self, title, text):
+        ret = QMessageBox.question(self, title, text, QMessageBox.Yes | QMessageBox.No)
+        if ret == QMessageBox.Yes:
+            cali = text.split('New Cali:')[1]
+            self.agent.set_calibration(cali)
 
     def updated_table(self, df: pd.DataFrame):
+        if df.shape[0] == 0:
+            self.ui.tbl_result.clear()
+            self.ui.tbl_result.setRowCount(0)
+            self.ui.tbl_result.setHorizontalHeaderLabels(df.columns)
+            return
         if self.__result_df.shape[0] == df.shape[0]:
             return
 
         self.__result_df = df
         self.ui.tbl_result.clear()
-        self.on_text_changed('predict_status', '等待按下測試按鈕t ')
+        self.on_text_changed('predict_status', '等待按下測試按鈕')
         row_count, col_count = df.shape
         self.ui.tbl_result.setRowCount(row_count)
         self.ui.tbl_result.setColumnCount(col_count)
@@ -108,7 +131,7 @@ class MainWindow(QMainWindow):
                 self.ui.tbl_result.setItem(row, column, item)
 
         self.update_result_info(df.iloc[-1, :])
-        self.update_fig()  # ted_added
+        self.update_fig(df.iloc[-1, :]['file_name'])
 
     def update_result_info(self, data: pd.Series):
         self.on_text_changed('dB', str(np.round(data['decibel'], 1)))
@@ -127,6 +150,9 @@ class MainWindow(QMainWindow):
             style = "background: transparent"
             self.on_text_changed(item_name, '')
             self.on_style_changed(item_name, style)
+
+        self.ui.ted_widget.axes.clear()
+        self.ui.ted_widget.draw()
 
     def do_predict(self):
         threading.Thread(target=self.agent.start_analysis).start()

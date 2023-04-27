@@ -8,6 +8,8 @@ import time
 import socket
 import threading
 import pandas as pd
+import datetime
+from sqlalchemy import text
 from typing import Union
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QMessageBox
@@ -15,17 +17,29 @@ from PySide6.QtWidgets import QMessageBox
 from Logger import get_logger
 from config import Configuration
 from FactoryControl import IOCtrl, VirtualIO
-from database import create_session, AIResult
+from database import create_session, AIResult, create_table, drop_table
 
 log = get_logger()
 CONFIG = Configuration()
 STATUS_MSG = CONFIG.status_message
 
 
+def my_mkdir(path: str) -> None:
+    now_path = ''
+    for i in path.split('\\'):
+        now_path = os.path.join(now_path, i)
+        try:
+            # os.mkdir(now_path)
+            os.makedirs(now_path)
+        except:
+            pass
+
+
 class UIController(QObject):
     change_text = Signal(str, str)
     change_style = Signal(str, str)
-    show_error_msg = Signal(str, str)
+    show_msg = Signal(str, str, str)
+    show_question_msg = Signal(str, str)
     table_updated = Signal(pd.DataFrame)
     clear_result = Signal()
 
@@ -40,8 +54,27 @@ class UIController(QObject):
         # self.io_ctrl.cleanup()
         pass
 
-    def calibration(self):
-        pass
+    def set_calibration(self, cali):
+        response = self.__send_socket(action='set_cali', filename=cali)
+        self.show_msg.emit('info', 'Success', response.get('result')[0])
+
+    def get_calibration(self):
+        # self.io_ctrl.disable()
+        self.__set_status(STATUS_MSG['calibration'])
+        response = self.__send_socket(action='get_cali', filename='cali')
+        try:
+            if response.get('status'):
+                raise BaseException
+            result = response.get('result')
+            title = 'Do you want to save?'
+            msg = f"Old Cali: {result[0]}\nNew Cali: {result[1]}"
+            self.show_question_msg.emit(title, msg)
+        except BaseException:
+            self.__show_error(response.get('status'))
+            threading.Thread(target=self.check_server_start, args=(True,)).start()
+        finally:
+            self.__set_status(STATUS_MSG['wait_for_press'])
+            # self.io_ctrl.enable()
 
     def start_analysis(self, event=None):
         # self.io_ctrl.disable()
@@ -95,12 +128,30 @@ class UIController(QObject):
         if response.get('status') == 5:
             self.__clear_result()
             self.__set_status(STATUS_MSG['recording'])
+        elif response.get('status') == 'OK':
+            self.__set_status(STATUS_MSG['wait_for_press'])
+            self.__set_server_status('success')
+        elif response.get('status') == 1:
+            self.__set_server_status('fail')
 
     def updated_table(self):
         df = pd.read_sql_query(self.session.query(AIResult).statement, self.session.bind)
         df = df[['file_name', 'decibel', 'ai_score1', 'ai_score2', 'freq_result', 'ai_result', 'final_result',
                  'created_at']]
         self.table_updated.emit(df)
+
+    def export_to_csv(self):
+        df = pd.read_sql_query(self.session.query(AIResult).statement, self.session.bind)
+        df = df[['file_name', 'decibel', 'ai_score1', 'ai_score2', 'freq_result', 'ai_result', 'final_result',
+                 'created_at']]
+        output_path = os.path.join('CSV')
+        my_mkdir(output_path)
+        filename = datetime.datetime.now().strftime('%Y%m%d%H%M')
+        df.to_csv(os.path.join(output_path, f"{filename}.csv"))
+
+    def clear_database(self):
+        self.session.execute(text('DELETE FROM ai_result'))
+        self.session.commit()
 
     def __show_error(self, code):
         parser_error_code = {
@@ -113,7 +164,8 @@ class UIController(QObject):
         }
         error_code = f"Error code[{code}]"
         error_msg = parser_error_code.get(code) + error_code
-        self.show_error_msg.emit('Error', error_msg)
+        # self.show_error_msg.emit('Error', error_msg)
+        self.show_msg('critical', 'Error', error_msg)
         # threading.Thread(target=QMessageBox.critical, args=(None, 'Error', error_msg)).start()
 
     def __set_server_status(self, status, count=None):
