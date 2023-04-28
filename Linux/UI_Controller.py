@@ -9,6 +9,8 @@ import socket
 import threading
 import pandas as pd
 import datetime
+from pydub import AudioSegment
+from pydub.playback import play
 from sqlalchemy import text
 from typing import Union
 from PySide6.QtCore import QObject, Signal
@@ -138,6 +140,8 @@ class UIController(QObject):
         df = pd.read_sql_query(self.session.query(AIResult).statement, self.session.bind)
         df = df[['file_name', 'decibel', 'ai_score1', 'ai_score2', 'freq_result', 'ai_result', 'final_result',
                  'created_at']]
+        df = df[-1:-4:-1]
+        df.reset_index(drop=True, inplace=True)
         self.table_updated.emit(df)
 
     def export_to_csv(self):
@@ -152,6 +156,20 @@ class UIController(QObject):
     def clear_database(self):
         self.session.execute(text('DELETE FROM ai_result'))
         self.session.commit()
+
+    @staticmethod
+    def audio_player(lock: threading.Lock):
+        if lock.locked():
+            return
+        try:
+            lock.acquire()
+            song = AudioSegment.from_mp3(os.path.join('source', f"last_audio.mp3"))
+            song += 5
+            play(song)
+        except FileNotFoundError as e:
+            pass
+        finally:
+            lock.release()
 
     def __show_error(self, code):
         parser_error_code = {

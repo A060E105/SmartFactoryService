@@ -1,15 +1,15 @@
+import os
 import sys
 import threading
 import numpy as np
 import pandas as pd
-from PySide6.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox
-from PySide6.QtCore import QObject, Signal, QTimer
-from PySide6.QtGui import QAction, QIcon
-from ui_mainwindow import Ui_MainWindow
-
-from UI_Controller import UIController
 import matplotlib.pyplot as plt
-import os
+from PySide6.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox
+from PySide6.QtCore import QTimer
+from PySide6.QtGui import QColor
+
+from ui_mainwindow import Ui_MainWindow
+from UI_Controller import UIController
 
 
 # http://c.biancheng.net/view/1863.html
@@ -24,6 +24,7 @@ class MainWindow(QMainWindow):
         self.agent = agent
         self.__result_df = pd.DataFrame()
         self.__timer_count = 0
+        self.player_lock = threading.Lock()
 
         super(MainWindow, self).__init__()
         self.ui = Ui_MainWindow()
@@ -111,12 +112,17 @@ class MainWindow(QMainWindow):
             self.agent.set_calibration(cali)
 
     def updated_table(self, df: pd.DataFrame):
+        def get_rgb_from_hex(code):
+            code_hex = code.replace('#', '')
+            rgb = tuple(int(code_hex[i:i+2], 16) for i in (0, 2, 4))
+            return QColor.fromRgb(*rgb)
+
         if df.shape[0] == 0:
             self.ui.tbl_result.clear()
             self.ui.tbl_result.setRowCount(0)
             self.ui.tbl_result.setHorizontalHeaderLabels(df.columns)
             return
-        if self.__result_df.shape[0] == df.shape[0]:
+        if self.__result_df.equals(df):
             return
 
         self.__result_df = df
@@ -127,10 +133,14 @@ class MainWindow(QMainWindow):
         self.ui.tbl_result.setColumnCount(col_count)
         self.ui.tbl_result.setHorizontalHeaderLabels(df.columns)
 
+        color = ['#71FF97', '#e0ca3c', '#e0ca3c']
+
         for row, row_data in df.iterrows():
             for column, cell_data in enumerate(row_data):
                 item = QTableWidgetItem(str(cell_data))
                 self.ui.tbl_result.setItem(row, column, item)
+            for j in range(self.ui.tbl_result.columnCount()):
+                self.ui.tbl_result.item(row, j).setBackground(get_rgb_from_hex(color[row]))
 
         self.update_result_info(df.iloc[-1, :])
         self.update_fig(df.iloc[-1, :]['file_name'])
@@ -160,11 +170,7 @@ class MainWindow(QMainWindow):
         threading.Thread(target=self.agent.start_analysis).start()
 
     def do_play_audio(self):
-        print('play audio')
-        # TODO: need to set flag avoid user push too fast
-        self.ui.btn_play.setEnabled(False)
-        print('play audio finished!!')
-        self.ui.btn_play.setEnabled(True)
+        threading.Thread(target=self.agent.audio_player, args=(self.player_lock,)).start()
 
     def on_text_changed(self, label_name: str, text: str) -> None:
         mapping = {'server_status': self.ui.lbl_server_status,

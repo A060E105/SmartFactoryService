@@ -541,6 +541,8 @@ class SmartFactoryService:
                 self.combine_result()
                 analysis_result = self.queue.get()
                 self.queue.put(analysis_result)
+                shutil.copyfile(os.path.join(SOURCE_PATH, f"{self.filename}.mp3"),
+                                os.path.join(SOURCE_PATH, 'last_audio.mp3'))
                 rm_file(path=SOURCE_PATH, filename=self.filename + '.wav')
                 remote_backup(filename=self.filename + '.mp3', result=analysis_result.get('result')[0])
                 backup(filename=self.filename + '.mp3', result=analysis_result.get('result')[0])
