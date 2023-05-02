@@ -38,6 +38,8 @@ class Ui_MainWindow(object):
         self.actionclear_all_data.setObjectName(u"actionclear_all_data")
         self.actionchange_model = QAction(MainWindow)
         self.actionchange_model.setObjectName(u"actionchange_model")
+        self.actionupdate_model = QAction(MainWindow)
+        self.actionupdate_model.setObjectName(u"actionupdate_model")
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.tbl_result = QTableWidget(self.centralwidget)
@@ -45,7 +47,10 @@ class Ui_MainWindow(object):
         self.tbl_result.setGeometry(QRect(20, 410, 671, 381))
         self.btn_predict = QPushButton(self.centralwidget)
         self.btn_predict.setObjectName(u"btn_predict")
-        self.btn_predict.setGeometry(QRect(30, 240, 171, 61))
+        self.btn_predict.setGeometry(QRect(30, 290, 251, 91))
+        font = QFont()
+        font.setPointSize(35)
+        self.btn_predict.setFont(font)
         self.btn_predict.setAutoFillBackground(False)
         self.horizontalLayoutWidget = QWidget(self.centralwidget)
         self.horizontalLayoutWidget.setObjectName(u"horizontalLayoutWidget")
@@ -66,9 +71,9 @@ class Ui_MainWindow(object):
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
         self.label_3 = QLabel(self.gridLayoutWidget)
         self.label_3.setObjectName(u"label_3")
-        font = QFont()
-        font.setPointSize(20)
-        self.label_3.setFont(font)
+        font1 = QFont()
+        font1.setPointSize(20)
+        self.label_3.setFont(font1)
         self.label_3.setScaledContents(False)
         self.label_3.setAlignment(Qt.AlignCenter)
 
@@ -76,7 +81,7 @@ class Ui_MainWindow(object):
 
         self.label_2 = QLabel(self.gridLayoutWidget)
         self.label_2.setObjectName(u"label_2")
-        self.label_2.setFont(font)
+        self.label_2.setFont(font1)
         self.label_2.setScaledContents(False)
         self.label_2.setAlignment(Qt.AlignCenter)
 
@@ -84,7 +89,7 @@ class Ui_MainWindow(object):
 
         self.label = QLabel(self.gridLayoutWidget)
         self.label.setObjectName(u"label")
-        self.label.setFont(font)
+        self.label.setFont(font1)
         self.label.setScaledContents(False)
         self.label.setAlignment(Qt.AlignCenter)
 
@@ -92,7 +97,7 @@ class Ui_MainWindow(object):
 
         self.lbl_dB = QLabel(self.gridLayoutWidget)
         self.lbl_dB.setObjectName(u"lbl_dB")
-        self.lbl_dB.setFont(font)
+        self.lbl_dB.setFont(font1)
         self.lbl_dB.setScaledContents(False)
         self.lbl_dB.setAlignment(Qt.AlignCenter)
 
@@ -100,7 +105,7 @@ class Ui_MainWindow(object):
 
         self.lbl_KDE = QLabel(self.gridLayoutWidget)
         self.lbl_KDE.setObjectName(u"lbl_KDE")
-        self.lbl_KDE.setFont(font)
+        self.lbl_KDE.setFont(font1)
         self.lbl_KDE.setScaledContents(False)
         self.lbl_KDE.setAlignment(Qt.AlignCenter)
 
@@ -108,7 +113,7 @@ class Ui_MainWindow(object):
 
         self.lbl_MSE = QLabel(self.gridLayoutWidget)
         self.lbl_MSE.setObjectName(u"lbl_MSE")
-        self.lbl_MSE.setFont(font)
+        self.lbl_MSE.setFont(font1)
         self.lbl_MSE.setScaledContents(False)
         self.lbl_MSE.setAlignment(Qt.AlignCenter)
 
@@ -116,41 +121,57 @@ class Ui_MainWindow(object):
 
         self.gridLayoutWidget_3 = QWidget(self.centralwidget)
         self.gridLayoutWidget_3.setObjectName(u"gridLayoutWidget_3")
-        self.gridLayoutWidget_3.setGeometry(QRect(30, 50, 531, 181))
+        self.gridLayoutWidget_3.setGeometry(QRect(30, 50, 611, 211))
         self.gridLayout_3 = QGridLayout(self.gridLayoutWidget_3)
         self.gridLayout_3.setObjectName(u"gridLayout_3")
         self.gridLayout_3.setContentsMargins(0, 0, 0, 0)
-        self.lbl_predict_status = QLabel(self.gridLayoutWidget_3)
-        self.lbl_predict_status.setObjectName(u"lbl_predict_status")
-        self.lbl_predict_status.setFont(font)
-        self.lbl_predict_status.setScaledContents(False)
-        self.lbl_predict_status.setAlignment(Qt.AlignCenter)
-
-        self.gridLayout_3.addWidget(self.lbl_predict_status, 1, 1, 1, 1)
-
         self.label_8 = QLabel(self.gridLayoutWidget_3)
         self.label_8.setObjectName(u"label_8")
-        self.label_8.setFont(font)
+        self.label_8.setFont(font1)
         self.label_8.setScaledContents(False)
         self.label_8.setAlignment(Qt.AlignCenter)
 
-        self.gridLayout_3.addWidget(self.label_8, 1, 0, 1, 1)
+        self.gridLayout_3.addWidget(self.label_8, 2, 0, 1, 1)
+
+        self.lbl_predict_status = QLabel(self.gridLayoutWidget_3)
+        self.lbl_predict_status.setObjectName(u"lbl_predict_status")
+        self.lbl_predict_status.setFont(font1)
+        self.lbl_predict_status.setScaledContents(False)
+        self.lbl_predict_status.setAlignment(Qt.AlignCenter)
+
+        self.gridLayout_3.addWidget(self.lbl_predict_status, 2, 1, 1, 1)
 
         self.lbl_server_status = QLabel(self.gridLayoutWidget_3)
         self.lbl_server_status.setObjectName(u"lbl_server_status")
-        self.lbl_server_status.setFont(font)
+        self.lbl_server_status.setFont(font1)
         self.lbl_server_status.setScaledContents(False)
         self.lbl_server_status.setAlignment(Qt.AlignCenter)
 
-        self.gridLayout_3.addWidget(self.lbl_server_status, 0, 1, 1, 1)
+        self.gridLayout_3.addWidget(self.lbl_server_status, 1, 1, 1, 1)
 
         self.label_7 = QLabel(self.gridLayoutWidget_3)
         self.label_7.setObjectName(u"label_7")
-        self.label_7.setFont(font)
+        self.label_7.setFont(font1)
         self.label_7.setScaledContents(False)
         self.label_7.setAlignment(Qt.AlignCenter)
 
-        self.gridLayout_3.addWidget(self.label_7, 0, 0, 1, 1)
+        self.gridLayout_3.addWidget(self.label_7, 1, 0, 1, 1)
+
+        self.label_10 = QLabel(self.gridLayoutWidget_3)
+        self.label_10.setObjectName(u"label_10")
+        self.label_10.setFont(font1)
+        self.label_10.setScaledContents(False)
+        self.label_10.setAlignment(Qt.AlignCenter)
+
+        self.gridLayout_3.addWidget(self.label_10, 0, 0, 1, 1)
+
+        self.lbl_model_name = QLabel(self.gridLayoutWidget_3)
+        self.lbl_model_name.setObjectName(u"lbl_model_name")
+        self.lbl_model_name.setFont(font1)
+        self.lbl_model_name.setScaledContents(False)
+        self.lbl_model_name.setAlignment(Qt.AlignCenter)
+
+        self.gridLayout_3.addWidget(self.lbl_model_name, 0, 1, 1, 1)
 
         self.horizontalLayoutWidget_2 = QWidget(self.centralwidget)
         self.horizontalLayoutWidget_2.setObjectName(u"horizontalLayoutWidget_2")
@@ -160,16 +181,16 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.setContentsMargins(0, 0, 0, 0)
         self.label_5 = QLabel(self.horizontalLayoutWidget_2)
         self.label_5.setObjectName(u"label_5")
-        font1 = QFont()
-        font1.setPointSize(15)
-        self.label_5.setFont(font1)
+        font2 = QFont()
+        font2.setPointSize(15)
+        self.label_5.setFont(font2)
         self.label_5.setAlignment(Qt.AlignCenter)
 
         self.horizontalLayout_2.addWidget(self.label_5)
 
         self.label_4 = QLabel(self.horizontalLayoutWidget_2)
         self.label_4.setObjectName(u"label_4")
-        self.label_4.setFont(font1)
+        self.label_4.setFont(font2)
         self.label_4.setAlignment(Qt.AlignCenter)
 
         self.horizontalLayout_2.addWidget(self.label_4)
@@ -182,14 +203,14 @@ class Ui_MainWindow(object):
         self.horizontalLayout_3.setContentsMargins(0, 0, 0, 0)
         self.lbl_freq_analysis = QLabel(self.horizontalLayoutWidget_3)
         self.lbl_freq_analysis.setObjectName(u"lbl_freq_analysis")
-        self.lbl_freq_analysis.setFont(font1)
+        self.lbl_freq_analysis.setFont(font2)
         self.lbl_freq_analysis.setAlignment(Qt.AlignCenter)
 
         self.horizontalLayout_3.addWidget(self.lbl_freq_analysis)
 
         self.lbl_AI_noise_analysis = QLabel(self.horizontalLayoutWidget_3)
         self.lbl_AI_noise_analysis.setObjectName(u"lbl_AI_noise_analysis")
-        self.lbl_AI_noise_analysis.setFont(font1)
+        self.lbl_AI_noise_analysis.setFont(font2)
         self.lbl_AI_noise_analysis.setAlignment(Qt.AlignCenter)
 
         self.horizontalLayout_3.addWidget(self.lbl_AI_noise_analysis)
@@ -202,17 +223,15 @@ class Ui_MainWindow(object):
         self.horizontalLayout_4.setContentsMargins(0, 0, 0, 0)
         self.lbl_final_result = QLabel(self.horizontalLayoutWidget_4)
         self.lbl_final_result.setObjectName(u"lbl_final_result")
-        self.lbl_final_result.setFont(font)
+        self.lbl_final_result.setFont(font1)
         self.lbl_final_result.setAlignment(Qt.AlignCenter)
 
         self.horizontalLayout_4.addWidget(self.lbl_final_result)
 
         self.btn_play = QPushButton(self.centralwidget)
         self.btn_play.setObjectName(u"btn_play")
-        self.btn_play.setGeometry(QRect(500, 280, 151, 101))
-        font2 = QFont()
-        font2.setPointSize(35)
-        self.btn_play.setFont(font2)
+        self.btn_play.setGeometry(QRect(500, 310, 151, 71))
+        self.btn_play.setFont(font)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
@@ -233,6 +252,7 @@ class Ui_MainWindow(object):
         self.menuFile.addAction(self.actionclear_all_data)
         self.menuFile.addSeparator()
         self.menuFile.addAction(self.actionchange_model)
+        self.menuFile.addAction(self.actionupdate_model)
         self.menuOption.addAction(self.actionrestart_server)
         self.menuOption.addAction(self.actionmic_cali)
 
@@ -248,6 +268,7 @@ class Ui_MainWindow(object):
         self.actionmic_cali.setText(QCoreApplication.translate("MainWindow", u"mic calibration", None))
         self.actionclear_all_data.setText(QCoreApplication.translate("MainWindow", u"clear all data", None))
         self.actionchange_model.setText(QCoreApplication.translate("MainWindow", u"change model", None))
+        self.actionupdate_model.setText(QCoreApplication.translate("MainWindow", u"update_model", None))
         self.btn_predict.setText(QCoreApplication.translate("MainWindow", u"Run Test", None))
         self.label_3.setText(QCoreApplication.translate("MainWindow", u"AI Score2", None))
         self.label_2.setText(QCoreApplication.translate("MainWindow", u"AI Score1", None))
@@ -255,10 +276,12 @@ class Ui_MainWindow(object):
         self.lbl_dB.setText(QCoreApplication.translate("MainWindow", u"35.3", None))
         self.lbl_KDE.setText(QCoreApplication.translate("MainWindow", u"35.3", None))
         self.lbl_MSE.setText(QCoreApplication.translate("MainWindow", u"35.3", None))
-        self.lbl_predict_status.setText(QCoreApplication.translate("MainWindow", u"\u5f85\u6a5f\u4e2d", None))
         self.label_8.setText(QCoreApplication.translate("MainWindow", u"\u6e2c\u8a66\u72c0\u614b", None))
+        self.lbl_predict_status.setText(QCoreApplication.translate("MainWindow", u"\u5f85\u6a5f\u4e2d", None))
         self.lbl_server_status.setText(QCoreApplication.translate("MainWindow", u"\u672a\u555f\u52d5", None))
         self.label_7.setText(QCoreApplication.translate("MainWindow", u"Server \u72c0\u614b", None))
+        self.label_10.setText(QCoreApplication.translate("MainWindow", u"\u7576\u524d\u6a21\u578b", None))
+        self.lbl_model_name.setText(QCoreApplication.translate("MainWindow", u"\u672a\u4f7f\u7528", None))
         self.label_5.setText(QCoreApplication.translate("MainWindow", u"\u983b\u8b5c\u5206\u6790", None))
         self.label_4.setText(QCoreApplication.translate("MainWindow", u"AI\u7570\u97f3\u5206\u6790", None))
         self.lbl_freq_analysis.setText(QCoreApplication.translate("MainWindow", u"OK", None))
