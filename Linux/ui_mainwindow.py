@@ -36,6 +36,8 @@ class Ui_MainWindow(object):
         self.actionmic_cali.setObjectName(u"actionmic_cali")
         self.actionclear_all_data = QAction(MainWindow)
         self.actionclear_all_data.setObjectName(u"actionclear_all_data")
+        self.actionchange_model = QAction(MainWindow)
+        self.actionchange_model.setObjectName(u"actionchange_model")
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.tbl_result = QTableWidget(self.centralwidget)
@@ -228,8 +230,9 @@ class Ui_MainWindow(object):
 
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuOption.menuAction())
-        self.menuFile.addAction(self.actioncreate_csv)
         self.menuFile.addAction(self.actionclear_all_data)
+        self.menuFile.addSeparator()
+        self.menuFile.addAction(self.actionchange_model)
         self.menuOption.addAction(self.actionrestart_server)
         self.menuOption.addAction(self.actionmic_cali)
 
@@ -244,6 +247,7 @@ class Ui_MainWindow(object):
         self.actionrestart_server.setText(QCoreApplication.translate("MainWindow", u"restart server", None))
         self.actionmic_cali.setText(QCoreApplication.translate("MainWindow", u"mic calibration", None))
         self.actionclear_all_data.setText(QCoreApplication.translate("MainWindow", u"clear all data", None))
+        self.actionchange_model.setText(QCoreApplication.translate("MainWindow", u"change model", None))
         self.btn_predict.setText(QCoreApplication.translate("MainWindow", u"Run Test", None))
         self.label_3.setText(QCoreApplication.translate("MainWindow", u"AI Score2", None))
         self.label_2.setText(QCoreApplication.translate("MainWindow", u"AI Score1", None))

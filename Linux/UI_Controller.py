@@ -14,7 +14,7 @@ from pydub.playback import play
 from sqlalchemy import text
 from typing import Union
 from PySide6.QtCore import QObject, Signal
-from PySide6.QtWidgets import QMessageBox
+from PySide6.QtWidgets import QMessageBox, QInputDialog
 
 from Logger import get_logger
 from config import Configuration
@@ -152,6 +152,12 @@ class UIController(QObject):
         my_mkdir(output_path)
         filename = datetime.datetime.now().strftime('%Y%m%d%H%M')
         df.to_csv(os.path.join(output_path, f"{filename}.csv"))
+
+    def change_model(self):
+        text, ok = QInputDialog.getText(self, "QInputDialog.getText()",
+                                        "User name:")
+        if ok and text:
+            print(text)
 
     def clear_database(self):
         self.session.execute(text('DELETE FROM ai_result'))

@@ -45,6 +45,7 @@ class MainWindow(QMainWindow):
         self.ui.actionmic_cali.triggered.connect(self.calibration)
         self.ui.actioncreate_csv.triggered.connect(self.agent.export_to_csv)
         self.ui.actionclear_all_data.triggered.connect(self.agent.clear_database)
+        self.ui.actionchange_model.triggered.connect(self.agent.change_model())
 
         # initialized
         # ted temp mark
