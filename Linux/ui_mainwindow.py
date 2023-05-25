@@ -22,12 +22,13 @@ from PySide6.QtWidgets import (QApplication, QGridLayout, QHBoxLayout, QHeaderVi
     QTableWidgetItem, QWidget)
 
 from mplwidget import MplWidget
+import resource_rc
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(1325, 842)
+        MainWindow.resize(1284, 798)
         self.actioncreate_csv = QAction(MainWindow)
         self.actioncreate_csv.setObjectName(u"actioncreate_csv")
         self.actionrestart_server = QAction(MainWindow)
@@ -44,7 +45,7 @@ class Ui_MainWindow(object):
         self.centralwidget.setObjectName(u"centralwidget")
         self.tbl_result = QTableWidget(self.centralwidget)
         self.tbl_result.setObjectName(u"tbl_result")
-        self.tbl_result.setGeometry(QRect(20, 410, 671, 381))
+        self.tbl_result.setGeometry(QRect(20, 410, 671, 311))
         self.btn_predict = QPushButton(self.centralwidget)
         self.btn_predict.setObjectName(u"btn_predict")
         self.btn_predict.setGeometry(QRect(30, 290, 251, 91))
@@ -58,14 +59,9 @@ class Ui_MainWindow(object):
         self.horizontalLayout = QHBoxLayout(self.horizontalLayoutWidget)
         self.horizontalLayout.setObjectName(u"horizontalLayout")
         self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
-        self.ted_widget = MplWidget(self.horizontalLayoutWidget)
-        self.ted_widget.setObjectName(u"ted_widget")
-
-        self.horizontalLayout.addWidget(self.ted_widget)
-
         self.gridLayoutWidget = QWidget(self.centralwidget)
         self.gridLayoutWidget.setObjectName(u"gridLayoutWidget")
-        self.gridLayoutWidget.setGeometry(QRect(820, 430, 421, 141))
+        self.gridLayoutWidget.setGeometry(QRect(800, 390, 421, 141))
         self.gridLayout = QGridLayout(self.gridLayoutWidget)
         self.gridLayout.setObjectName(u"gridLayout")
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
@@ -175,7 +171,7 @@ class Ui_MainWindow(object):
 
         self.horizontalLayoutWidget_2 = QWidget(self.centralwidget)
         self.horizontalLayoutWidget_2.setObjectName(u"horizontalLayoutWidget_2")
-        self.horizontalLayoutWidget_2.setGeometry(QRect(820, 580, 421, 41))
+        self.horizontalLayoutWidget_2.setGeometry(QRect(800, 540, 421, 41))
         self.horizontalLayout_2 = QHBoxLayout(self.horizontalLayoutWidget_2)
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
         self.horizontalLayout_2.setContentsMargins(0, 0, 0, 0)
@@ -197,7 +193,7 @@ class Ui_MainWindow(object):
 
         self.horizontalLayoutWidget_3 = QWidget(self.centralwidget)
         self.horizontalLayoutWidget_3.setObjectName(u"horizontalLayoutWidget_3")
-        self.horizontalLayoutWidget_3.setGeometry(QRect(820, 620, 421, 51))
+        self.horizontalLayoutWidget_3.setGeometry(QRect(800, 580, 421, 51))
         self.horizontalLayout_3 = QHBoxLayout(self.horizontalLayoutWidget_3)
         self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
         self.horizontalLayout_3.setContentsMargins(0, 0, 0, 0)
@@ -217,7 +213,7 @@ class Ui_MainWindow(object):
 
         self.horizontalLayoutWidget_4 = QWidget(self.centralwidget)
         self.horizontalLayoutWidget_4.setObjectName(u"horizontalLayoutWidget_4")
-        self.horizontalLayoutWidget_4.setGeometry(QRect(820, 690, 421, 91))
+        self.horizontalLayoutWidget_4.setGeometry(QRect(800, 630, 421, 91))
         self.horizontalLayout_4 = QHBoxLayout(self.horizontalLayoutWidget_4)
         self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
         self.horizontalLayout_4.setContentsMargins(0, 0, 0, 0)
@@ -230,12 +226,19 @@ class Ui_MainWindow(object):
 
         self.btn_play = QPushButton(self.centralwidget)
         self.btn_play.setObjectName(u"btn_play")
-        self.btn_play.setGeometry(QRect(500, 310, 151, 71))
+        self.btn_play.setGeometry(QRect(500, 280, 151, 101))
         self.btn_play.setFont(font)
+        icon = QIcon()
+        icon.addFile(u":/home/play-flat.png", QSize(), QIcon.Normal, QIcon.On)
+        self.btn_play.setIcon(icon)
+        self.btn_play.setIconSize(QSize(80, 80))
+        self.ted_widget = MplWidget(self.centralwidget)
+        self.ted_widget.setObjectName(u"ted_widget")
+        self.ted_widget.setGeometry(QRect(670, 18, 589, 361))
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 1325, 24))
+        self.menubar.setGeometry(QRect(0, 0, 1284, 24))
         self.menubar.setMinimumSize(QSize(20, 20))
         self.menubar.setNativeMenuBar(False)
         self.menuFile = QMenu(self.menubar)
@@ -287,7 +290,7 @@ class Ui_MainWindow(object):
         self.lbl_freq_analysis.setText(QCoreApplication.translate("MainWindow", u"OK", None))
         self.lbl_AI_noise_analysis.setText(QCoreApplication.translate("MainWindow", u"OK", None))
         self.lbl_final_result.setText(QCoreApplication.translate("MainWindow", u"PASS", None))
-        self.btn_play.setText(QCoreApplication.translate("MainWindow", u"Play", None))
+        self.btn_play.setText("")
         self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"File", None))
         self.menuOption.setTitle(QCoreApplication.translate("MainWindow", u"Option", None))
     # retranslateUi

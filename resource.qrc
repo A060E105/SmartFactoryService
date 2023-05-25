@@ -1,0 +1,5 @@
+<RCC>
+  <qresource lang="eng" prefix="home">
+    <file>play-flat.png</file>
+  </qresource>
+</RCC>
