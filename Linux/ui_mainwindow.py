@@ -59,6 +59,11 @@ class Ui_MainWindow(object):
         self.horizontalLayout = QHBoxLayout(self.horizontalLayoutWidget)
         self.horizontalLayout.setObjectName(u"horizontalLayout")
         self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
+        self.ted_widget = MplWidget(self.horizontalLayoutWidget)
+        self.ted_widget.setObjectName(u"ted_widget")
+
+        self.horizontalLayout.addWidget(self.ted_widget)
+
         self.gridLayoutWidget = QWidget(self.centralwidget)
         self.gridLayoutWidget.setObjectName(u"gridLayoutWidget")
         self.gridLayoutWidget.setGeometry(QRect(800, 390, 421, 141))
@@ -213,7 +218,7 @@ class Ui_MainWindow(object):
 
         self.horizontalLayoutWidget_4 = QWidget(self.centralwidget)
         self.horizontalLayoutWidget_4.setObjectName(u"horizontalLayoutWidget_4")
-        self.horizontalLayoutWidget_4.setGeometry(QRect(800, 630, 421, 91))
+        self.horizontalLayoutWidget_4.setGeometry(QRect(800, 650, 421, 71))
         self.horizontalLayout_4 = QHBoxLayout(self.horizontalLayoutWidget_4)
         self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
         self.horizontalLayout_4.setContentsMargins(0, 0, 0, 0)
@@ -232,9 +237,6 @@ class Ui_MainWindow(object):
         icon.addFile(u":/resource/Linux/resource/play-flat.png", QSize(), QIcon.Normal, QIcon.On)
         self.btn_play.setIcon(icon)
         self.btn_play.setIconSize(QSize(80, 80))
-        self.ted_widget = MplWidget(self.centralwidget)
-        self.ted_widget.setObjectName(u"ted_widget")
-        self.ted_widget.setGeometry(QRect(670, 18, 589, 361))
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
