@@ -4,13 +4,15 @@ import threading
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from PySide6.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox
+from PySide6.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QInputDialog
 from PySide6.QtCore import QTimer
 from PySide6.QtGui import QColor
 
 from ui_mainwindow import Ui_MainWindow
 from UI_Controller import UIController
+from config import Configuration
 
+CONFIG = Configuration()
 
 # http://c.biancheng.net/view/1863.html
 # Qt QTableWidget 基本操作
@@ -30,6 +32,7 @@ class MainWindow(QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.setWindowTitle('智慧工廠用戶端')
+        self.ui.lbl_model_name.setText(CONFIG.model_name)
         # Set Signal connect
         agent.change_text.connect(self.on_text_changed)
         agent.change_style.connect(self.on_style_changed)
@@ -45,7 +48,8 @@ class MainWindow(QMainWindow):
         self.ui.actionmic_cali.triggered.connect(self.calibration)
         self.ui.actioncreate_csv.triggered.connect(self.agent.export_to_csv)
         self.ui.actionclear_all_data.triggered.connect(self.agent.clear_database)
-        self.ui.actionchange_model.triggered.connect(self.agent.change_model())
+        self.ui.actionchange_model.triggered.connect(self.change_model)
+        self.ui.actionupdate_model.triggered.connect(self.update_model)
 
         # initialized
         # ted temp mark
@@ -53,6 +57,7 @@ class MainWindow(QMainWindow):
         self.clear_result_info()
         self.ui.lbl_predict_status.setText('等待按下測試按鈕')
         threading.Thread(target=self.agent.check_server_start).start()
+        self.update_model()
 
         # set timer
         self.update_table_timer = QTimer()
@@ -106,6 +111,16 @@ class MainWindow(QMainWindow):
         if mapping.__contains__(msg_type):
             mapping.get(msg_type)(None, title, text)
 
+    def change_model(self):
+        text, ok = QInputDialog.getText(self, "Change Model", "Use ID")
+        if ok and text.strip():
+            print(ok, text)
+            # TODO(): using FTP get model
+            self.agent.change_model(use_id=text)
+
+    def update_model(self):
+        self.agent.update_model()
+
     def show_question_msg(self, title, text):
         ret = QMessageBox.question(self, title, text, QMessageBox.Yes | QMessageBox.No)
         if ret == QMessageBox.Yes:
@@ -143,8 +158,8 @@ class MainWindow(QMainWindow):
             for j in range(self.ui.tbl_result.columnCount()):
                 self.ui.tbl_result.item(row, j).setBackground(get_rgb_from_hex(color[row]))
 
-        self.update_result_info(df.iloc[-1, :])
-        self.update_fig(df.iloc[-1, :]['file_name'])
+        self.update_result_info(df.iloc[0, :])
+        self.update_fig(df.iloc[0, :]['file_name'])
 
     def update_result_info(self, data: pd.Series):
         self.on_text_changed('dB', str(np.round(data['decibel'], 1)))

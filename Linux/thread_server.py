@@ -14,6 +14,7 @@ from Audio import Audio
 import SmartFactoryService as SFS
 from config import Configuration
 from Logger import get_logger
+from storage import CSVAgent
 from database import create_session, AIResult, create_table
 
 
@@ -130,8 +131,10 @@ class ClientThread(threading.Thread):
 
             log.info(f'client action: {action}, filename: {filename}, device: {device}')
 
+            current_datetime = datetime.now()
+
             sfs = SFS.SmartFactoryService(filename=filename, device=device, queue=queue,
-                                          gpu_lock=gpu_lock, config=config_name)
+                                          gpu_lock=gpu_lock, config=config_name, current_datetime=current_datetime)
 
             today = datetime.today()
             if expire > today:      # 是否過期
@@ -155,7 +158,6 @@ class ClientThread(threading.Thread):
                 result = json.dumps(result_list)
                 result += '\r\n'
                 if action == action_list[0]:
-                    # TODO(): save result to the sqlite
                     tmp_result = result_list.get('result')[0]
                     kde_score = result_list.get('KDE_score')[0]
                     mse_score = result_list.get('MSE_score')[0]
@@ -172,6 +174,12 @@ class ClientThread(threading.Thread):
                     session.add(ai_result)
                     session.commit()
                     session.close()
+
+                    # TODO(): save result to csv
+                    csv_agent = CSVAgent(CONFIG.model_name, CONFIG.model_version, current_datetime)
+                    csv_agent.write_csv(file_name=filename, ai_score1=ai_score1, ai_score2=ai_score2,
+                                        freq_result=freq_result, ai_result=tmp_result, final_result=final_result,
+                                        created_at=current_datetime.strftime('%Y-%m-%d %H:%M:%S'))
             else:
                 result = json.dumps({'status': 0, 'result': ['???']})
 

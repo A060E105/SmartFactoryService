@@ -9,12 +9,13 @@ import socket
 import threading
 import pandas as pd
 import datetime
+from io import BytesIO
+from ftplib import FTP
 from pydub import AudioSegment
 from pydub.playback import play
 from sqlalchemy import text
 from typing import Union
 from PySide6.QtCore import QObject, Signal
-from PySide6.QtWidgets import QMessageBox, QInputDialog
 
 from Logger import get_logger
 from config import Configuration
@@ -153,11 +154,13 @@ class UIController(QObject):
         filename = datetime.datetime.now().strftime('%Y%m%d%H%M')
         df.to_csv(os.path.join(output_path, f"{filename}.csv"))
 
-    def change_model(self):
-        text, ok = QInputDialog.getText(self, "QInputDialog.getText()",
-                                        "User name:")
-        if ok and text:
-            print(text)
+    def change_model(self, use_id):
+        self.__model_update(use_id)
+
+    def update_model(self):
+        if self.__has_model_update():
+            self.show_msg.emit('info', 'Info', '模型更新中')
+            self.__model_update()
 
     def clear_database(self):
         self.session.execute(text('DELETE FROM ai_result'))
@@ -189,7 +192,7 @@ class UIController(QObject):
         error_code = f"Error code[{code}]"
         error_msg = parser_error_code.get(code) + error_code
         # self.show_error_msg.emit('Error', error_msg)
-        self.show_msg('critical', 'Error', error_msg)
+        self.show_msg.emit('critical', 'Error', error_msg)
         # threading.Thread(target=QMessageBox.critical, args=(None, 'Error', error_msg)).start()
 
     def __set_server_status(self, status, count=None):
@@ -226,6 +229,77 @@ class UIController(QObject):
          設定畫面上的樣式
         """
         self.change_style.emit(label, style)
+
+    @staticmethod
+    def __has_model_update() -> bool:
+        try:
+            tsp = 0
+            ftp = FTP()
+            ftp.connect(host=CONFIG.ftp_server, port=CONFIG.ftp_port)
+
+            try:
+                ftp.login(CONFIG.ftp_username, CONFIG.ftp_passwd)
+                ftp_path = ['upload', CONFIG.model_id]
+                for folder in ftp_path:
+                    ftp.cwd(folder)
+                local_path = BytesIO()
+                ftp.retrbinary(f"RETR Lincense", local_path.write)
+                tsp = int(local_path.getvalue().decode())
+                local_path.close()
+            except Exception as e:
+                print(f"check model has update: {e}")
+            finally:
+                ftp.quit()
+
+            with open('Lincense', 'r') as f:
+                curr_tsp = int(f.readline())
+
+            return tsp > curr_tsp
+        except Exception as e:
+            return False
+
+    def __model_update(self, use_id=None) -> None:
+        """
+        :param use_id: 依據模型的 use_id 更新模型與設定檔參數，沒有傳入模型 use_id 則使用設定檔中原本的 use_id
+        """
+        msg = '更新模型' if use_id is None else '更換模型'
+        use_id = CONFIG.model_id if use_id is None else use_id
+
+        ftp = FTP()
+        ftp.connect(host=CONFIG.ftp_server, port=CONFIG.ftp_port)
+
+        try:
+            ftp.login(CONFIG.ftp_username, CONFIG.ftp_passwd)
+            ftp_path = ['upload', use_id]
+            for folder in ftp_path:
+                ftp.cwd(folder)
+            for file in ftp.nlst():
+                pass
+                print(file)
+                # with open(file, 'wb') as f:
+                #     ftp.retrbinary(f"RETR {file}", f.write)
+
+            # upload config file params
+            params = {}
+            with open('params.json', 'r') as f:
+                params = json.load(f)
+
+            for dict_type, tmp_params in params.items():
+                for key, value in tmp_params.items():
+                    if dict_type == 'single':
+                        print(value)
+                        # CONFIG.data[key] = value
+                    else:
+                        for key2, value2 in value.items():
+                            print(value2)
+                            # CONFIG.data[key][key2] = value2
+            # CONFIG.save()
+            self.show_msg.emit('info', 'Success', f"{msg}成功")
+        except Exception as e:
+            print(e)
+            self.show_msg.emit('critical', 'Error', f"{msg}失敗")
+        finally:
+            ftp.quit()
 
     @staticmethod
     def __send_socket(action='all', filename='', config_name='mic_default') -> dict:

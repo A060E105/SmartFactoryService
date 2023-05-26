@@ -40,7 +40,7 @@ from collections import namedtuple
 # configuration
 from Audio import Audio
 from config import Configuration
-from storage import storage as STORAGE
+from storage import CSVAgent
 
 from Logger import get_logger
 
@@ -73,8 +73,8 @@ if gpus:
     except RuntimeError as e:
         log.exception(e)
 
-MODEL = load_model('./' + CONFIG.model_name)
-ENCODER_MODEL = load_model('./' + CONFIG.encoder_model_name)
+MODEL = load_model('./model.h5')
+ENCODER_MODEL = load_model('./encoder_model.h5')
 
 
 # =======================================================
@@ -134,18 +134,19 @@ def rm_file(path='', filename=None) -> None:
         os.remove(file)
 
 
-def backup(filename=None, result='') -> None:
+def backup(filename=None, result='', current_datetime=None) -> None:
     target = CONFIG.backup_path
     target = target.replace('\\', '/')
     file = SOURCE_PATH + filename
+    csv_agent = CSVAgent(CONFIG.model_name, CONFIG.model_version, current_datetime)
 
     # create NG/OK folder
     for folder in AI_analysis.my_class:
-        path = os.path.join(target, STORAGE.filename, folder)
+        path = os.path.join(target, csv_agent.filename, folder)
         my_mkdir(path)
 
     try:
-        target_path = os.path.join(target, STORAGE.filename, result)
+        target_path = os.path.join(target, csv_agent.filename, result)
         shutil.move(file, target_path)
     except PermissionError:
         log.warning('Backup exception is Permission error')
@@ -155,12 +156,11 @@ def backup(filename=None, result='') -> None:
         pass
 
 
-def ftp_upload(filename=None, result=''):
+def ftp_upload(filename=None, result='', today=datetime.datetime.now()) -> None:
     ftp_server = CONFIG.ftp_server
     ftp_username = CONFIG.ftp_username
     ftp_passwd = CONFIG.ftp_passwd
     ftp_port = CONFIG.ftp_port
-    ftp_path = CONFIG.ftp_path
 
     ftp = FTP()
     ftp.connect(host=ftp_server, port=ftp_port)
@@ -168,56 +168,57 @@ def ftp_upload(filename=None, result=''):
     file = SOURCE_PATH + filename
     try:
         ftp.login(ftp_username, ftp_passwd)
-        ftp.cwd(ftp_path)
 
-        folder_name = datetime.datetime.now().strftime("%Y%m%d")
-        if folder_name not in ftp.nlst():
+        today = today.strftime("%Y%m%d")
+
+        ftp_path = [CONFIG.model_name, CONFIG.model_version, today]
+        for folder_name in ftp_path:
             ftp.mkd(folder_name)
-
-        ftp.cwd(folder_name)
+            ftp.cwd(folder_name)
 
         # create NG/OK folder
-        # for folder in AI_analysis.my_class:
-        #     if folder not in ftp.nlst():
-        #         ftp.mkd(folder)
-        #
-        # ftp.cwd(result)
+        for folder in AI_analysis.my_class:
+            ftp.mkd(folder)
+        ftp.cwd(result)
+
         ftp.storbinary(f"STOR {filename}", open(file, 'rb'), 1024)
         ftp.quit()
     except Exception as e:
         log.exception('Remote Backup exception from FTP.', exc_info=False)
 
 
-def remote_backup(filename=None, result='') -> None:
+def remote_backup(filename=None, result='', today=datetime.datetime.now()) -> None:
     """
     備份至遠端目錄
 
     :param filename:
     :param result:
+    :param today:
     :return:
     """
-    if CONFIG.is_ftp_backup:
-        ftp_upload(filename, result)
-    else:
-        target = CONFIG.remote_backup_path
-        target = target.replace('\\', '/')
-        if target != '':    # 路徑不為空才執行遠端備份
-            file = SOURCE_PATH + filename
-
-            # create NG/OK folder
-            for folder in AI_analysis.my_class:
-                path = os.path.join(target, STORAGE.filename, folder)
-                my_mkdir(path)
-
-            try:
-                target_path = os.path.join(target, STORAGE.filename, result, filename)
-                shutil.copyfile(file, target_path)
-            except PermissionError:
-                log.warning('Remote Backup exception is Permission error')
-                pass
-            except:
-                log.exception('Remote Backup exception', exc_info=False)
-                pass
+    ftp_upload(filename, result, today)
+    # if CONFIG.is_ftp_backup:
+    #     ftp_upload(filename, result, today)
+    # else:
+    #     target = CONFIG.remote_backup_path
+    #     target = target.replace('\\', '/')
+    #     if target != '':    # 路徑不為空才執行遠端備份
+    #         file = SOURCE_PATH + filename
+    #
+    #         # create NG/OK folder
+    #         for folder in AI_analysis.my_class:
+    #             path = os.path.join(target, STORAGE.filename, folder)
+    #             my_mkdir(path)
+    #
+    #         try:
+    #             target_path = os.path.join(target, STORAGE.filename, result, filename)
+    #             shutil.copyfile(file, target_path)
+    #         except PermissionError:
+    #             log.warning('Remote Backup exception is Permission error')
+    #             pass
+    #         except:
+    #             log.exception('Remote Backup exception', exc_info=False)
+    #             pass
 
 
 def parser_result(results: list) -> str:
@@ -515,12 +516,14 @@ class AI_analysis():
 class SmartFactoryService:
     Result = namedtuple('Result', ['status', 'model', 'result'])
 
-    def __init__(self, filename='', device='Cotron EZM-001', queue=None, gpu_lock=None, config=None) -> None:
+    def __init__(self, filename='', device='Cotron EZM-001', queue=None, gpu_lock=None, config=None,
+                 current_datetime=None) -> None:
         self.filename = filename
         self.queue = queue
         self.gpu_lock = gpu_lock
         self.device = device
         self.config_name = config
+        self.current_datetime = current_datetime
         self.au = Audio(self.filename, device=self.device, config=config)
 
     # action all, record -> to spectrogram -> AI analysis
@@ -545,7 +548,7 @@ class SmartFactoryService:
                                 os.path.join(SOURCE_PATH, 'last_audio.mp3'))
                 rm_file(path=SOURCE_PATH, filename=self.filename + '.wav')
                 remote_backup(filename=self.filename + '.mp3', result=analysis_result.get('result')[0])
-                backup(filename=self.filename + '.mp3', result=analysis_result.get('result')[0])
+                backup(filename=self.filename + '.mp3', result=analysis_result.get('result')[0], current_datetime=self.current_datetime)
             else:
                 result = dict(self.Result(status=2, model=[], result=[])._asdict())
                 self.queue.put(result)

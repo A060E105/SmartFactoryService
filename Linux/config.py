@@ -45,15 +45,11 @@ class Configuration:
 
     @property
     def model_name(self) -> str:
-        return self.data['model_name']
-
-    @property
-    def encoder_model_name(self) -> str:
-        return self.data['encoder_model_name']
+        return self.data.get('model_name', 'no_found_model_name')
 
     @property
     def model_id(self) -> str:
-        return self.data.get('model_use_id', 'test')
+        return self.data.get('model_use_id', 'no_found_model_id')
 
     @property
     def model_version(self) -> str:
@@ -235,8 +231,9 @@ class Configuration:
     # create configuration file
     def create(self) -> None:
         self.data['version'] = last_version
-        self.data['model_name'] = 'model.h5'
-        self.data['encoder_model_name'] = 'encoder_model.h5'
+        self.data['model_name'] = 'no_model'
+        self.data['model_use_id'] = 'no_model'
+        self.data['model_version'] = 'no_model'
         self.data['device_name'] = "A"
         self.data['result_ratio'] = 50
         # device settings
