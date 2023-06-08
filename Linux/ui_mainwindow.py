@@ -234,7 +234,7 @@ class Ui_MainWindow(object):
         self.btn_play.setGeometry(QRect(500, 280, 151, 101))
         self.btn_play.setFont(font)
         icon = QIcon()
-        icon.addFile(u"resource/play-flat.png", QSize(), QIcon.Normal, QIcon.On)
+        icon.addFile(u":/resource/play-flat.png", QSize(), QIcon.Normal, QIcon.On)
         self.btn_play.setIcon(icon)
         self.btn_play.setIconSize(QSize(80, 80))
         MainWindow.setCentralWidget(self.centralwidget)
